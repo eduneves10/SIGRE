@@ -2,7 +2,7 @@ import api from './api'
 
 /**
  * Lista as salas - GET /rooms/
- * Retorna: [{id, codigo_sala, descricao_sala,...}]
+ * Retorna: [{id, nomeSala, tipoSala, descricao_sala, capacidade, idSala}]
  */
 
 export const getRooms = async () => {

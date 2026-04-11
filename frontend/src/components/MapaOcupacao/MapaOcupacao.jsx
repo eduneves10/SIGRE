@@ -60,7 +60,7 @@ export default function MapaOcupacao() {
       setErro('')
       try {
         const [resReservas, resSalas, resPeriodos, resCursos]= await Promise.all([
-          getReservations(),
+          getReservations({ roomId: filtroSala !== 'todas' ? filtroSala : undefined }),
           getRooms(),
           getPeriods(),
           getCursos(),
@@ -73,7 +73,7 @@ export default function MapaOcupacao() {
 
         // Define valores padrão dos filtros com o primeiro item de cada lista
         if (resPeriodos?.length)   setFiltroTurma(String(resPeriodos[0].id))
-        if (resCursos?.length)     setFiltroCurso(String(resCursos[0].id || resCursos[0]/idCurso))
+        if (resCursos?.length)     setFiltroCurso(String(resCursos[0].id || resCursos[0].idCurso))
       } catch (err) {
         setErro('Erro ao carregar dados. Verifique se o backend esta rodando')
         console.error(err)
@@ -82,7 +82,7 @@ export default function MapaOcupacao() {
       }
     }
     carregar()
-  }, [])
+  }, [filtroSala])
 
   // ── Helpers para encontrar reserva em um slot/dia ─────────────────────────
   const encontrarReserva = (slot, dia) => {
@@ -110,7 +110,7 @@ export default function MapaOcupacao() {
  
   const nomeSala = (salaId) => {
     const sala = salas.find(s => String(s.id) === String(salaId))
-    return sala?.codigo_sala || sala?.descricao_sala || `Sala ${salaId}`
+    return sala?.nomeSala || sala?.descricao_sala || `Sala ${salaId}`
   }
 
   // --- EXPORTAR EXCEL 
@@ -312,7 +312,7 @@ export default function MapaOcupacao() {
               <select value={filtroSala} onChange={e => setFiltroSala(e.target.value)} className="bg-transparent w-full outline-none">
                 <option value="todas">Todas</option>
                 {salas.map(s => (
-                  <option key={s.id} value={String(s.id)}>{s.codigo_sala || s.descricao_sala}</option>
+                  <option key={s.id} value={String(s.id)}>{s.nomeSala || s.descricao_sala}</option>
                 ))}
               </select>
             </div>
