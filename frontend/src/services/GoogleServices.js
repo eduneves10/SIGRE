@@ -1,3 +1,5 @@
+import api from "./api"
+
 export const getGoogleConnectUrl = () => {
     return `${api.defaults.baseURL}/google/connect`
 }

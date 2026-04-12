@@ -8,7 +8,7 @@ import api from "./api";
  * Retorna: { items: [ { id, start, end, summary, extendedProperties, ... } ] }
  */
 
-export const getReservations = async() => {
+export const getReservations = async(filtros = {}) => {
     const res = await api.get('/reservations/', {params: filtros})
     return res.data
 }
