@@ -7,7 +7,7 @@ import {
     Plus, LayoutGrid, ClipboardList, Calendar, Database,
     CheckCircle2, XCircle, Clock, Building2, User, Users,
     AlignLeft, ChevronDown, ChevronUp, GraduationCap, BookOpen,
-    Bell, Filter, Search, FileSpreadsheet, AlertTriangle, Settings, Link
+    Bell, Filter, Search, FileSpreadsheet, AlertTriangle, Settings, Link, ArrowRight
 } from 'lucide-react'
 
 // Componentes Internos
@@ -26,6 +26,7 @@ const STATUS_STYLES = {
 }
 
 const AdminPainel = () => {
+    const { adicionarHorario, atualizarHorario } = useSchedule()
     const [showImport, setShowImport] = useState(false)
     const [showForm, setShowForm] = useState(false)
     const [horarioEdit, setHorarioEdit] = useState(null)
@@ -459,23 +460,41 @@ const AdminPainel = () => {
 
                 {activeTab === 'calendario' && (
                     <div className="space-y-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3">
-                            <p className="text-sm text-blue-900 font-medium">
-                                Sincronize reservas aprovadas com sua agenda Google (use credenciais reais no .env do backend).
-                            </p>
-                            <button type="button"
-                                onClick={async () => {
-                                    try {
-                                        await startGoogleCalendarConnect()
-                                    } catch (e) {
-                                        const msg = e?.response?.data?.detail ?? e?.message ?? 'Falha ao conectar'
-                                        alert(typeof msg === 'string' ? msg : 'Configure GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET no servidor.')
-                                    }
-                                }}
-                                className="shrink-0 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors">
-                                Conectar Google Calendar
-                            </button>
-                        </div>
+                        {!isGoogleConnected ? (
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 animate-in fade-in slide-in-from-top-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                                        <Link size={18} className="text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-blue-900 font-bold">Conectar Google Calendar</p>
+                                        <p className="text-xs text-blue-700/70">Sincronize as reservas aprovadas automaticamente com sua agenda.</p>
+                                    </div>
+                                </div>
+                                <button type="button"
+                                    onClick={handleConnectGoogle}
+                                    className="shrink-0 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95 flex items-center gap-2">
+                                    Conectar Agora <ArrowRight size={14} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-100 bg-green-50/60 px-4 py-3 animate-in fade-in slide-in-from-top-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                                        <CheckCircle2 size={18} className="text-green-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-green-900 font-bold">Google Calendar Conectado</p>
+                                        <p className="text-xs text-green-700/70">As reservas aprovadas estão sendo sincronizadas automaticamente.</p>
+                                    </div>
+                                </div>
+                                <button type="button"
+                                    onClick={handleDisconnectGoogle}
+                                    className="shrink-0 px-4 py-2 rounded-xl border border-green-200 text-green-700 text-xs font-bold hover:bg-green-100 transition-all">
+                                    Desconectar Agenda
+                                </button>
+                            </div>
+                        )}
                         <MonthCalendar />
                     </div>
                 )}

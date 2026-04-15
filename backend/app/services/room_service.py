@@ -8,12 +8,8 @@ from app.schemas.room import RoomCreate, RoomUpdate
 class RoomService(BaseService[Sala]):
     def __init__(self):
         super().__init__(room_repository)
-
+        
     def create(self, db: Session, data: RoomCreate) -> Sala:
-        if db.query(Sala).filter(Sala.codigo_sala == data.nomeSala).first():
-            from fastapi import HTTPException
-            raise HTTPException(status_code=409, detail="Sala com este código já cadastrada")
-
         db_data = {
             "codigo_sala": data.nomeSala,
             "descricao_sala": data.descricao_sala,

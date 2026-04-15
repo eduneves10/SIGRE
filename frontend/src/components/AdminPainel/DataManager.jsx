@@ -3,6 +3,7 @@ import { useSchedule } from '../Schedule/ScheduleContext'
 import { Edit2, Trash2, X, Plus, Check, BookOpen, Users, Building2, GraduationCap, Calendar, ArrowLeft, Layers } from 'lucide-react'
 import api from '../../services/api'
 import { getRoomTypes } from '../../services/RoomTypeService'
+import { z } from 'zod'
 
 const inp = "w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 focus:ring-2 focus:ring-indigo-400 focus:outline-none focus:border-indigo-400 transition-all text-sm"
 const lbl = "block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5"
@@ -16,6 +17,11 @@ const CONFIG = {
             { front: 'email',     back: 'emailProf',     label: 'E-mail',        type: 'email', ph: 'joao@uepa.br' },
             { front: 'matricula', back: 'matriculaProf', label: 'Matrícula / SIAPE (opcional)', type: 'text', ph: 'Ex: 123456' },
         ],
+        validationSchema: z.object({
+            nomeProf: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
+            emailProf: z.string().email('E-mail inválido'),
+            matriculaProf: z.string().optional().or(z.literal('')),
+        })
     },
     disciplinas: {
         title: 'Disciplinas', singular: 'Disciplina', endpoint: 'disciplines', labelKey: 'nomeDisciplina',
@@ -25,6 +31,11 @@ const CONFIG = {
             { front: 'matricula',   back: 'matriculaDisciplina', label: 'Código/Sigla',       type: 'text', ph: 'Ex: MAT001' },
             { front: 'cursoId',     back: 'cursoId',             label: 'Curso (opcional)',   type: 'dynamic-select', listName: 'cursos' },
         ],
+        validationSchema: z.object({
+            nomeDisciplina: z.string().min(2, 'O nome da disciplina é obrigatório'),
+            matriculaDisciplina: z.string().min(2, 'O código/sigla é obrigatório'),
+            cursoId: z.coerce.number().optional().nullable(),
+        })
     },
     cursos: {
         title: 'Cursos', singular: 'Curso', endpoint: 'courses', labelKey: 'nomeCurso',
@@ -34,6 +45,11 @@ const CONFIG = {
             { front: 'sigla', back: 'siglaCurso', label: 'Sigla',         type: 'text',  ph: 'Ex: BES' },
             { front: 'cor',   back: 'corCurso',   label: 'Cor de identificação', type: 'color' },
         ],
+        validationSchema: z.object({
+            nomeCurso: z.string().min(3, 'O nome do curso é obrigatório'),
+            siglaCurso: z.string().min(2, 'A sigla é obrigatória'),
+            corCurso: z.string().regex(/^#[0-9A-F]{6}$/i, 'Cor inválida'),
+        })
     },
     tiposSala: {
         title: 'Tipos de sala', singular: 'Tipo de sala', endpoint: 'room-types', labelKey: 'nome',
@@ -41,6 +57,9 @@ const CONFIG = {
         fields: [
             { front: 'nome', back: 'nome', label: 'Nome do tipo', type: 'text', ph: 'Ex: Laboratório' },
         ],
+        validationSchema: z.object({
+            nome: z.string().min(2, 'O nome do tipo é obrigatório'),
+        })
     },
     salas: {
         title: 'Salas', singular: 'Sala', endpoint: 'rooms', labelKey: 'nomeSala',
@@ -51,6 +70,11 @@ const CONFIG = {
               listName: 'tiposSala', listLabelKey: 'nome' },
             { front: 'capacidade', back: 'capacidade', label: 'Capacidade', type: 'number', ph: 'Ex: 40' }
         ],
+        validationSchema: z.object({
+            nomeSala: z.string().min(1, 'O nome da sala é obrigatório'),
+            tipoSalaId: z.coerce.number().int().min(1, 'O tipo de sala é obrigatório'),
+            capacidade: z.coerce.number().int().min(1, 'A capacidade deve ser maior que zero'),
+        })
     },
     periodos: {
         title: 'Períodos', singular: 'Período', endpoint: 'periods', labelKey: 'semestre',
@@ -61,6 +85,12 @@ const CONFIG = {
             { front: 'dataInicio', back: 'dataInicio', label: 'Data início', type: 'date' },
             { front: 'dataFim',    back: 'dataFim',    label: 'Data fim',    type: 'date' },
         ],
+        validationSchema: z.object({
+            semestre: z.string().min(4, 'O semestre é obrigatório'),
+            descricao: z.string().optional(),
+            dataInicio: z.string().min(1, 'Data de início é obrigatória'),
+            dataFim: z.string().min(1, 'Data de fim é obrigatória'),
+        })
     },
 }
 
@@ -91,13 +121,38 @@ const ItemModal = ({ tipo, item, lists, onSave, onClose }) => {
     })
 
     const [data, setData] = useState(initial)
-    const set = (k, v) => setData(d => ({ ...d, [k]: v }))
+    const [errors, setErrors] = useState({})
+    
+    const set = (k, v) => {
+        setData(d => ({ ...d, [k]: v }))
+        if (errors[k]) setErrors(prev => {
+            const copy = { ...prev }
+            delete copy[k]
+            return copy
+        })
+    }
 
     const handleSubmit = () => {
         const payload = {}
         cfg.fields.forEach(f => {
             if (data[f.front] !== undefined && data[f.front] !== '') payload[f.back] = data[f.front]
         })
+
+        if (cfg.validationSchema) {
+            try {
+                cfg.validationSchema.parse(payload)
+                setErrors({})
+            } catch (err) {
+                if (err instanceof z.ZodError) {
+                    const fieldErrors = {}
+                    err.errors.forEach(e => {
+                        fieldErrors[e.path[0]] = e.message
+                    })
+                    setErrors(fieldErrors)
+                    return
+                }
+            }
+        }
 
         if (tipo === 'disciplinas') {
             if (payload.cursoId === '' || payload.cursoId === undefined) {
@@ -133,38 +188,42 @@ const ItemModal = ({ tipo, item, lists, onSave, onClose }) => {
                     </button>
                 </div>
                 <div className="p-6 space-y-4">
-                    {cfg.fields.map(field => (
-                        <div key={field.front}>
-                            <label className={lbl}>{field.label}</label>
-                            {field.type === 'select' ? (
-                                <select className={inp} value={data[field.front]} onChange={e => set(field.front, e.target.value)}>
-                                    <option value="">Selecione...</option>
-                                    {field.options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-                                </select>
-                            ) : field.type === 'dynamic-select' ? (
-                                <select className={inp} value={data[field.front]} onChange={e => set(field.front, e.target.value)}>
-                                    <option value="">Selecione...</option>
-                                    {(lists[field.listName] || []).map(o => {
-                                        const id = o.id || o.idCurso || o.idProfessor
-                                        const lblKey = field.listLabelKey || 'nomeCurso'
-                                        const label = o[lblKey] || o.nomeCurso || o.siglaCurso || o.nome || String(id)
-                                        return <option key={id} value={String(id)}>{label}</option>
-                                    })}
-                                </select>
-                            ) : field.type === 'color' ? (
-                                <div className="flex items-center gap-3 border border-gray-200 rounded-xl p-3 bg-gray-50">
-                                    <input type="color" className="h-9 w-14 cursor-pointer rounded-lg border-0 bg-transparent"
-                                        value={data[field.front] || '#3b82f6'} onChange={e => set(field.front, e.target.value)} />
-                                    <span className="text-sm text-gray-400 font-mono">{data[field.front] || '#3b82f6'}</span>
-                                    <div className="w-6 h-6 rounded-lg ml-auto border border-gray-200 shadow-sm"
-                                        style={{ background: data[field.front] || '#3b82f6' }} />
-                                </div>
-                            ) : (
-                                <input type={field.type} className={inp} placeholder={field.ph || ''}
-                                    value={data[field.front]} onChange={e => set(field.front, e.target.value)} />
-                            )}
-                        </div>
-                    ))}
+                    {cfg.fields.map(field => {
+                        const error = errors[field.back]
+                        return (
+                            <div key={field.front}>
+                                <label className={lbl}>{field.label}</label>
+                                {field.type === 'select' ? (
+                                    <select className={`${inp} ${error ? 'border-red-500 ring-red-100' : ''}`} value={data[field.front]} onChange={e => set(field.front, e.target.value)}>
+                                        <option value="">Selecione...</option>
+                                        {field.options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+                                    </select>
+                                ) : field.type === 'dynamic-select' ? (
+                                    <select className={`${inp} ${error ? 'border-red-500 ring-red-100' : ''}`} value={data[field.front]} onChange={e => set(field.front, e.target.value)}>
+                                        <option value="">Selecione...</option>
+                                        {(lists[field.listName] || []).map(o => {
+                                            const id = o.id || o.idCurso || o.idProfessor
+                                            const lblKey = field.listLabelKey || 'nomeCurso'
+                                            const label = o[lblKey] || o.nomeCurso || o.siglaCurso || o.nome || String(id)
+                                            return <option key={id} value={String(id)}>{label}</option>
+                                        })}
+                                    </select>
+                                ) : field.type === 'color' ? (
+                                    <div className="flex items-center gap-3 border border-gray-200 rounded-xl p-3 bg-gray-50">
+                                        <input type="color" className="h-9 w-14 cursor-pointer rounded-lg border-0 bg-transparent"
+                                            value={data[field.front] || '#3b82f6'} onChange={e => set(field.front, e.target.value)} />
+                                        <span className="text-sm text-gray-400 font-mono">{data[field.front] || '#3b82f6'}</span>
+                                        <div className="w-6 h-6 rounded-lg ml-auto border border-gray-200 shadow-sm"
+                                            style={{ background: data[field.front] || '#3b82f6' }} />
+                                    </div>
+                                ) : (
+                                    <input type={field.type} className={`${inp} ${error ? 'border-red-500 ring-red-100' : ''}`} placeholder={field.ph || ''}
+                                        value={data[field.front]} onChange={e => set(field.front, e.target.value)} />
+                                )}
+                                {error && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{error}</p>}
+                            </div>
+                        )
+                    })}
                 </div>
                 <div className="flex gap-3 px-6 pb-6">
                     <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors">Cancelar</button>

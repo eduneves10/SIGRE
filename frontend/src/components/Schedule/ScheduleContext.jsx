@@ -77,8 +77,10 @@ export const ScheduleProvider = ({ children }) => {
                 api.get('/disciplines/'),
             ]);
 
-            setCursos(Array.isArray(resCursos.data) ? resCursos.data : []);
-            setSalas(Array.isArray(resSalas.data) ? resSalas.data : []);
+            const normalize = (arr, idKey) => (Array.isArray(arr) ? arr.map(x => ({ ...x, id: x.id ?? x[idKey] })) : []);
+            
+            setCursos(normalize(resCursos.data, 'idCurso'));
+            setSalas(normalize(resSalas.data, 'idSala'));
             
             const periodosFmt = Array.isArray(resPeriodos.data) 
                 ? resPeriodos.data.map(p => ({
@@ -110,8 +112,13 @@ export const ScheduleProvider = ({ children }) => {
                 semestre: aloc.semestre
             })));
 
-            setProfessores(Array.isArray(resProfs.data) ? resProfs.data : []);
-            setDisciplinas(Array.isArray(resDiscs.data) ? resDiscs.data : []);
+            setProfessores(normalize(resProfs.data, 'idProfessor'));
+            setDisciplinas(normalize(resDiscs.data, 'idDisciplina'));
+
+            console.log("─── DADOS CARREGADOS ───");
+            console.table(resSalas.data);
+            console.table(resProfs.data);
+            console.table(resDiscs.data);
 
         } catch (error) {
             console.error("Erro ao carregar dados:", error);
@@ -150,6 +157,8 @@ export const ScheduleProvider = ({ children }) => {
     const adicionarHorario = async (novoHorario) => {
         try {
             const body = buildReservationApiPayload(disciplinas, professores, novoHorario);
+            console.log("POST /reservations/", body);
+
             if (!body.fk_usuario) {
                 alert('Sessão inválida: faça login novamente.');
                 return;
@@ -157,8 +166,12 @@ export const ScheduleProvider = ({ children }) => {
             await api.post('/reservations/', body);
             recarregarDados();
             alert("Horário salvo!");
+            return true;
         } catch (error) {
-            console.error(error); alert("Erro ao salvar horário.");
+            console.error(error);
+            const msg = error.response?.data?.detail || "Erro ao salvar horário.";
+            alert(typeof msg === 'string' ? msg : "Erro ao salvar horário. Verifique os dados.");
+            return false;
         }
     };
 
@@ -166,10 +179,18 @@ export const ScheduleProvider = ({ children }) => {
         try {
             const baseId = String(id).split(':')[0];
             const body = buildReservationPatchPayload(disciplinas, professores, dados);
+            console.log(`PATCH /reservations/${baseId}`, body);
+
             await api.patch(`/reservations/${baseId}`, body);
             recarregarDados();
             alert("Horário atualizado!");
-        } catch (error) { console.error(error); alert("Erro ao atualizar."); }
+            return true;
+        } catch (error) {
+            console.error(error);
+            const msg = error.response?.data?.detail || "Erro ao atualizar.";
+            alert(typeof msg === 'string' ? msg : "Erro ao atualizar.");
+            return false;
+        }
     }
 
     const removerHorario = async (id) => {
