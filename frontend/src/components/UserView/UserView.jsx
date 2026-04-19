@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useSchedule } from '../Schedule/ScheduleContext'
 import ScheduleViiew from '../Schedule/ScheduleViiew'
 import RoomRequestForm from './RoomRequestForm'
+ import ProfileModal from './ProfileModal' 
 import axios from 'axios'
-import { Building2, ClipboardList, Plus, GraduationCap, BookOpen, LogOut, Bell, Calendar, Clock } from 'lucide-react'
+import { Building2, ClipboardList, Plus, GraduationCap, BookOpen, LogOut, Bell, Calendar, Clock, UserCircle } from 'lucide-react'
 import logo from '../../assets/logouepa.png'
 
 import api from '../../services/api'
@@ -20,6 +21,7 @@ const STATUS_STYLES = {
 }
 
 const UserView = ({ userRole, onLogOut }) => {
+    const [showProfile, setShowProfile] = useState(false)
     const { salas } = useSchedule()
     const [showForm, setShowForm]   = useState(false)
     const [activeTab, setActiveTab] = useState('grade')
@@ -96,15 +98,23 @@ const UserView = ({ userRole, onLogOut }) => {
                                     </div>
                                 </div>
                             )}
-                            <div className="flex items-center gap-2.5 bg-white/10 rounded-xl px-3 py-2">
+                            {/* Avatar clicável → abre ProfileModal */}
+                            <button
+                                onClick={() => setShowProfile(true)}
+                                title="Ver meu perfil"
+                                className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 rounded-xl px-3 py-2 transition-colors group text-left"
+                            >
                                 <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: cfg.color }}>
                                     <RoleIcon size={14} className="text-white" />
                                 </div>
                                 <div className="hidden sm:block">
                                     <p className="text-white text-xs font-bold leading-none">{adminUser}</p>
-                                    <p className="text-blue-300 text-[10px] mt-0.5">{cfg.label}</p>
+                                    <p className="text-blue-300 text-[10px] mt-0.5 flex items-center gap-1">
+                                        {cfg.label}
+                                        <UserCircle size={10} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+                                    </p>
                                 </div>
-                            </div>
+                            </button>
                             <button onClick={onLogOut}
                                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-red-500/60 text-white text-xs font-semibold transition-all">
                                 <LogOut size={14} />
@@ -223,6 +233,14 @@ const UserView = ({ userRole, onLogOut }) => {
                     onSolicitacaoCriada={handleNovaSolicitacao}
                 />
             )}
+
+            {showProfile && (
+                <ProfileModal
+                    userRole={userRole}
+                    onClose={() => setShowProfile(false)}
+                />
+            )}
+            
         </div>
     )
 }
