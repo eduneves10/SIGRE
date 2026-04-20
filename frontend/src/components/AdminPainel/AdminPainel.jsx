@@ -419,8 +419,11 @@ const AdminPainel = () => {
                                 <div key={s.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-all">
                                     <button onClick={() => setExpandedId(expandedId === s.id ? null : s.id)} className="w-full flex items-center gap-4 p-5 text-left">
                                         <div className="w-1.5 h-10 rounded-full" style={{ background: STATUS_STYLES[s.status].dot }} />
-                                        <div className="flex-1">
-                                            <p className="font-black text-gray-800 text-sm uppercase">{s.solicitante}</p>
+                                        <div className="flex-1 pr-4 min-w-0">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className="font-black text-gray-800 text-sm uppercase truncate">{s.solicitante}</p>
+                                                <p className="text-[10px] font-bold text-gray-400/80 uppercase tracking-widest whitespace-nowrap">{s.criadoEm}</p>
+                                            </div>
                                             <p className="text-xs text-gray-400 mt-0.5">{s.sala} — {s.horario}</p>
                                         </div>
                                         {expandedId === s.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
