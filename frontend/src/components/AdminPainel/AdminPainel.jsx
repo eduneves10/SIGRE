@@ -232,7 +232,6 @@ const AdminPainel = () => {
         { key: 'horarios', label: 'Horários', Icon: LayoutGrid, badge: null },
         { key: 'solicitacoes', label: 'Solicitações', Icon: ClipboardList, badge: pendentesSols > 0 ? pendentesSols : null },
         { key: 'calendario', label: 'Calendário', Icon: Calendar, badge: null },
-        { key: 'mapa', label: 'Grade', Icon: Calendar, badge: null },
         { key: 'cadastros', label: 'Cadastros', Icon: Database, badge: null },
         { key: 'usuarios', label: 'Usuários', Icon: Users, badge: pendentesUser > 0 ? pendentesUser : null },
         { key: 'configuracoes', label: 'Configurações', Icon: Settings, badge: null },
@@ -352,7 +351,6 @@ const AdminPainel = () => {
 
             {/* CONTEÚDO PRINCIPAL */}
             <div className="p-8">
-                {activeTab === 'mapa' && <MapaOcupacao />}
 
                 {activeTab === 'usuarios' && (
                     <UserManagement 
@@ -384,10 +382,7 @@ const AdminPainel = () => {
                             <p className="font-bold text-indigo-900">Registrar aulas e ocupação de salas</p>
                             <ul className="list-disc pl-5 text-xs text-indigo-900/85 leading-relaxed space-y-1">
                                 <li>
-                                    <strong>Novo horário</strong> abre o assistente completo (período, sala, disciplina, professor e curso), igual à lógica usada na grade.
-                                </li>
-                                <li>
-                                    Na aba <strong>Grade</strong> você preenche a ocupação por turnos e horários — útil para montar várias aulas na mesma sala em sequência.
+                                    <strong>Novo horário</strong> abre o assistente completo (sala, disciplina, professor e curso), igual à lógica usada na grade.
                                 </li>
                                 <li>
                                     Pedidos de espaço feitos por alunos ou professores aparecem em <strong>Solicitações</strong> para aprovação ou recusa.
@@ -395,10 +390,6 @@ const AdminPainel = () => {
                             </ul>
                         </div>
                         <div className="flex flex-wrap gap-2 justify-end">
-                            <button type="button" onClick={() => setActiveTab('mapa')}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border-2 border-indigo-200 bg-white text-indigo-800 hover:bg-indigo-50 transition-colors">
-                                <LayoutGrid size={16} /> Abrir grade de ocupação
-                            </button>
                             <button type="button" onClick={() => { setHorarioEdit(null); setShowForm(true) }}
                                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-95 transition-opacity"
                                 style={{ background: 'linear-gradient(135deg,#1c1aa3,#4f46e5)' }}>
@@ -428,8 +419,11 @@ const AdminPainel = () => {
                                 <div key={s.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-all">
                                     <button onClick={() => setExpandedId(expandedId === s.id ? null : s.id)} className="w-full flex items-center gap-4 p-5 text-left">
                                         <div className="w-1.5 h-10 rounded-full" style={{ background: STATUS_STYLES[s.status].dot }} />
-                                        <div className="flex-1">
-                                            <p className="font-black text-gray-800 text-sm uppercase">{s.solicitante}</p>
+                                        <div className="flex-1 pr-4 min-w-0">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className="font-black text-gray-800 text-sm uppercase truncate">{s.solicitante}</p>
+                                                <p className="text-[10px] font-bold text-gray-400/80 uppercase tracking-widest whitespace-nowrap">{s.criadoEm}</p>
+                                            </div>
                                             <p className="text-xs text-gray-400 mt-0.5">{s.sala} — {s.horario}</p>
                                         </div>
                                         {expandedId === s.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
