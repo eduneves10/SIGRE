@@ -16,7 +16,7 @@ import ScheduleViiew from '../Schedule/ScheduleViiew'
 import DataManager from './DataManager'
 import MonthCalendar from '../Calendar/MonthCalendar'
 import ImportarPlanilha from './ImportarPlanilha'
-import MapaOcupacao from '../MapaOcupacao/MapaOcupacao'
+
 import UserManagement from './UserManagement'
 
 const STATUS_STYLES = {
@@ -379,7 +379,7 @@ const AdminPainel = () => {
                             </div>
                         )}
                         <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-indigo-950 space-y-2">
-                            <p className="font-bold text-indigo-900">Registrar aulas e ocupação de salas</p>
+                            <p className="font-bold text-indigo-900">Registrar aulas e horários de salas</p>
                             <ul className="list-disc pl-5 text-xs text-indigo-900/85 leading-relaxed space-y-1">
                                 <li>
                                     <strong>Novo horário</strong> abre o assistente completo (sala, disciplina, professor e curso), igual à lógica usada na grade.
