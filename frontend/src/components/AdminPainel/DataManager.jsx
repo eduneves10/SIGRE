@@ -13,8 +13,8 @@ const CONFIG = {
         title: 'Professores', singular: 'Professor', endpoint: 'professors', labelKey: 'nomeProf',
         icon: Users, color: '#1d4ed8', colorBg: '#dbeafe',
         fields: [
-            { front: 'nome',      back: 'nomeProf',      label: 'Nome completo', type: 'text',  ph: 'Ex: João Silva' },
-            { front: 'email',     back: 'emailProf',     label: 'E-mail',        type: 'email', ph: 'joao@uepa.br' },
+            { front: 'nome', back: 'nomeProf', label: 'Nome completo', type: 'text', ph: 'Ex: João Silva' },
+            { front: 'email', back: 'emailProf', label: 'E-mail', type: 'email', ph: 'joao@uepa.br' },
             { front: 'matricula', back: 'matriculaProf', label: 'Matrícula / SIAPE (opcional)', type: 'text', ph: 'Ex: 123456' },
         ],
         validationSchema: z.object({
@@ -27,9 +27,9 @@ const CONFIG = {
         title: 'Disciplinas', singular: 'Disciplina', endpoint: 'disciplines', labelKey: 'nomeDisciplina',
         icon: BookOpen, color: '#7c3aed', colorBg: '#ede9fe',
         fields: [
-            { front: 'nome',        back: 'nomeDisciplina',      label: 'Nome da disciplina', type: 'text', ph: 'Ex: Cálculo I' },
-            { front: 'matricula',   back: 'matriculaDisciplina', label: 'Código/Sigla',       type: 'text', ph: 'Ex: MAT001' },
-            { front: 'cursoId',     back: 'cursoId',             label: 'Curso (opcional)',   type: 'dynamic-select', listName: 'cursos' },
+            { front: 'nome', back: 'nomeDisciplina', label: 'Nome da disciplina', type: 'text', ph: 'Ex: Cálculo I' },
+            { front: 'matricula', back: 'matriculaDisciplina', label: 'Código/Sigla', type: 'text', ph: 'Ex: MAT001' },
+            { front: 'cursoId', back: 'cursoId', label: 'Curso (opcional)', type: 'dynamic-select', listName: 'cursos' },
         ],
         validationSchema: z.object({
             nomeDisciplina: z.string().min(2, 'O nome da disciplina é obrigatório'),
@@ -41,9 +41,9 @@ const CONFIG = {
         title: 'Cursos', singular: 'Curso', endpoint: 'courses', labelKey: 'nomeCurso',
         icon: GraduationCap, color: '#0891b2', colorBg: '#cffafe',
         fields: [
-            { front: 'nome',  back: 'nomeCurso',  label: 'Nome do curso', type: 'text',  ph: 'Ex: Engenharia de Software' },
-            { front: 'sigla', back: 'siglaCurso', label: 'Sigla',         type: 'text',  ph: 'Ex: BES' },
-            { front: 'cor',   back: 'corCurso',   label: 'Cor de identificação', type: 'color' },
+            { front: 'nome', back: 'nomeCurso', label: 'Nome do curso', type: 'text', ph: 'Ex: Engenharia de Software' },
+            { front: 'sigla', back: 'siglaCurso', label: 'Sigla', type: 'text', ph: 'Ex: BES' },
+            { front: 'cor', back: 'corCurso', label: 'Cor de identificação', type: 'color' },
         ],
         validationSchema: z.object({
             nomeCurso: z.string().min(3, 'O nome do curso é obrigatório'),
@@ -66,8 +66,10 @@ const CONFIG = {
         icon: Building2, color: '#059669', colorBg: '#d1fae5',
         fields: [
             { front: 'nome', back: 'nomeSala', label: 'Nome da sala', type: 'text', ph: 'Ex: 101' },
-            { front: 'tipo', back: 'tipoSalaId', label: 'Tipo de sala', type: 'dynamic-select',
-              listName: 'tiposSala', listLabelKey: 'nome' },
+            {
+                front: 'tipo', back: 'tipoSalaId', label: 'Tipo de sala', type: 'dynamic-select',
+                listName: 'tiposSala', listLabelKey: 'nome'
+            },
             { front: 'capacidade', back: 'capacidade', label: 'Capacidade', type: 'number', ph: 'Ex: 40' }
         ],
         validationSchema: z.object({
@@ -80,10 +82,10 @@ const CONFIG = {
         title: 'Períodos', singular: 'Período', endpoint: 'periods', labelKey: 'semestre',
         icon: Calendar, color: '#d97706', colorBg: '#fef3c7',
         fields: [
-            { front: 'semestre',   back: 'semestre',   label: 'Semestre',    type: 'text', ph: 'Ex: 2025.1' },
-            { front: 'descricao',  back: 'descricao',  label: 'Descrição',   type: 'text', ph: 'Ex: Primeiro Semestre' },
+            { front: 'semestre', back: 'semestre', label: 'Semestre', type: 'text', ph: 'Ex: 2025.1' },
+            { front: 'descricao', back: 'descricao', label: 'Descrição', type: 'text', ph: 'Ex: Primeiro Semestre' },
             { front: 'dataInicio', back: 'dataInicio', label: 'Data início', type: 'date' },
-            { front: 'dataFim',    back: 'dataFim',    label: 'Data fim',    type: 'date' },
+            { front: 'dataFim', back: 'dataFim', label: 'Data fim', type: 'date' },
         ],
         validationSchema: z.object({
             semestre: z.string().min(4, 'O semestre é obrigatório'),
@@ -104,6 +106,8 @@ const ItemModal = ({ tipo, item, lists, onSave, onClose }) => {
     cfg.fields.forEach(f => {
         let val = item?.[f.front] || item?.[f.back] || ''
 
+        if (f.type === 'color' && !val) val = '#00FFFF'
+
         if (tipo === 'disciplinas' && item?.matriculaDisciplina?.includes('| META:') && f.front === 'matricula') {
             val = item.matriculaDisciplina.split('| META:')[0].trim()
         }
@@ -122,7 +126,7 @@ const ItemModal = ({ tipo, item, lists, onSave, onClose }) => {
 
     const [data, setData] = useState(initial)
     const [errors, setErrors] = useState({})
-    
+
     const set = (k, v) => {
         setData(d => ({ ...d, [k]: v }))
         if (errors[k]) setErrors(prev => {
@@ -135,7 +139,7 @@ const ItemModal = ({ tipo, item, lists, onSave, onClose }) => {
     const handleSubmit = () => {
         const payload = {}
         cfg.fields.forEach(f => {
-            if (data[f.front] !== undefined && data[f.front] !== '') payload[f.back] = data[f.front]
+            payload[f.back] = data[f.front] ?? ''
         })
 
         if (cfg.validationSchema) {
@@ -143,14 +147,16 @@ const ItemModal = ({ tipo, item, lists, onSave, onClose }) => {
                 cfg.validationSchema.parse(payload)
                 setErrors({})
             } catch (err) {
-                if (err instanceof z.ZodError) {
+                const issues = err.issues || err.errors
+                if (issues) {
                     const fieldErrors = {}
-                    err.errors.forEach(e => {
+                    issues.forEach(e => {
                         fieldErrors[e.path[0]] = e.message
                     })
                     setErrors(fieldErrors)
                     return
                 }
+                console.error("Erro de validação desconhecido:", err)
             }
         }
 
@@ -211,10 +217,10 @@ const ItemModal = ({ tipo, item, lists, onSave, onClose }) => {
                                 ) : field.type === 'color' ? (
                                     <div className="flex items-center gap-3 border border-gray-200 rounded-xl p-3 bg-gray-50">
                                         <input type="color" className="h-9 w-14 cursor-pointer rounded-lg border-0 bg-transparent"
-                                            value={data[field.front] || '#3b82f6'} onChange={e => set(field.front, e.target.value)} />
-                                        <span className="text-sm text-gray-400 font-mono">{data[field.front] || '#3b82f6'}</span>
+                                            value={data[field.front] || '#00FFFF'} onChange={e => set(field.front, e.target.value)} />
+                                        <span className="text-sm text-gray-400 font-mono">{data[field.front] || '#00FFFF'}</span>
                                         <div className="w-6 h-6 rounded-lg ml-auto border border-gray-200 shadow-sm"
-                                            style={{ background: data[field.front] || '#3b82f6' }} />
+                                            style={{ background: data[field.front] || '#00FFFF' }} />
                                     </div>
                                 ) : (
                                     <input type={field.type} className={`${inp} ${error ? 'border-red-500 ring-red-100' : ''}`} placeholder={field.ph || ''}
@@ -443,9 +449,9 @@ const DataManager = ({ onReturnToHorarios }) => {
                                                 <p className="text-sm font-semibold text-gray-800 truncate">
                                                     {item[cfg.labelKey] || item.semestre || 'Sem nome'}
                                                 </p>
-                                                {item.email    && <p className="text-xs text-gray-400 truncate">{item.email}</p>}
-                                                {hiddenSigla   && <p className="text-xs text-gray-400">{hiddenSigla}</p>}
-                                                {item.tipo     && <p className="text-xs text-gray-400 capitalize">{item.tipo}</p>}
+                                                {item.email && <p className="text-xs text-gray-400 truncate">{item.email}</p>}
+                                                {hiddenSigla && <p className="text-xs text-gray-400">{hiddenSigla}</p>}
+                                                {item.tipo && <p className="text-xs text-gray-400 capitalize">{item.tipo}</p>}
                                                 {item.descricao && activeTab === 'periodos' && <p className="text-xs text-gray-400 truncate">{item.descricao}</p>}
                                             </div>
                                         </div>
@@ -471,12 +477,12 @@ const DataManager = ({ onReturnToHorarios }) => {
 
             {/* Modal genérico */}
             {modal && (
-                <ItemModal 
-                    tipo={modal.tipo} 
+                <ItemModal
+                    tipo={modal.tipo}
                     item={modal.item}
-                    lists={lists} 
-                    onSave={handleModalSave} 
-                    onClose={handleModalClose} 
+                    lists={lists}
+                    onSave={handleModalSave}
+                    onClose={handleModalClose}
                 />
             )}
 
