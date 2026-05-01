@@ -30,6 +30,16 @@ _DIA_SEMANA_PARA_WEEKDAY = {
     "Domingo": 6,
 }
 
+_WEEKDAY_TO_RRULE = {
+    "Segunda": "MO",
+    "Terça": "TU",
+    "Quarta": "WE",
+    "Quinta": "TH",
+    "Sexta": "FR",
+    "Sábado": "SA",
+    "Domingo": "SU",
+}
+
 
 class AllocationService(BaseService[Alocacao]):
     def __init__(self):
@@ -198,6 +208,30 @@ class AllocationService(BaseService[Alocacao]):
 
         try:
             data = payload.model_dump()
+            
+            # Ajusta `dia_horario_saida` e preenche `recurrency` caso o frontend
+            # mande um intervalo de meses para um evento com `dia_semana`.
+            start_dt_local = data.get("dia_horario_inicio")
+            end_dt_local = data.get("dia_horario_saida")
+            dia_semana = data.get("dia_semana")
+            recurrency = data.get("recurrency")
+            
+            if dia_semana and not recurrency and start_dt_local and end_dt_local:
+                duration = end_dt_local - start_dt_local
+                if duration.total_seconds() > 86400: # > 1 dia
+                    h_end, m_end = end_dt_local.hour, end_dt_local.minute
+                    adjusted_end = start_dt_local.replace(hour=h_end, minute=m_end)
+                    if adjusted_end <= start_dt_local:
+                        adjusted_end += timedelta(days=1)
+                    
+                    until_dt = ensure_utc(end_dt_local).replace(hour=23, minute=59, second=59)
+                    until_str = until_dt.strftime("%Y%m%dT%H%M%SZ")
+                    weekday_code = _WEEKDAY_TO_RRULE.get(dia_semana)
+                    
+                    if weekday_code:
+                        data["dia_horario_saida"] = adjusted_end
+                        data["recurrency"] = f"RRULE:FREQ=WEEKLY;BYDAY={weekday_code};UNTIL={until_str}"
+            
             nova = self.repository.create(db, data)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Falha ao salvar no Banco Local: {e}")
@@ -217,6 +251,30 @@ class AllocationService(BaseService[Alocacao]):
         self._require_google_credentials(db, current_user.id)
         start_dt = ensure_utc(from_storage_datetime(alocacao.dia_horario_inicio))
         end_dt = ensure_utc(from_storage_datetime(alocacao.dia_horario_saida))
+        
+        recurrency = alocacao.recurrency
+        
+        if alocacao.dia_semana and not recurrency:
+            weekday_code = _WEEKDAY_TO_RRULE.get(alocacao.dia_semana)
+            if weekday_code:
+                target_wd = _DIA_SEMANA_PARA_WEEKDAY.get(alocacao.dia_semana)
+                days_diff = (target_wd - start_dt.weekday() + 7) % 7
+                if days_diff > 0:
+                    start_dt += timedelta(days=days_diff)
+                
+                duration = end_dt - start_dt
+
+                if duration.total_seconds() > 86400: # > 1 dia
+                    h_end, m_end = end_dt.hour, end_dt.minute
+                    end_dt = start_dt.replace(hour=h_end, minute=m_end)
+                    if end_dt <= start_dt:
+                        end_dt += timedelta(days=1)
+                else:
+                    pass
+                
+                until_dt = ensure_utc(from_storage_datetime(alocacao.data_fim)).replace(hour=23, minute=59, second=59)
+                until_str = until_dt.strftime("%Y%m%dT%H%M%SZ")
+                recurrency = f"RRULE:FREQ=WEEKLY;BYDAY={weekday_code};UNTIL={until_str}"
 
         if self._conflicts_google(db, current_user.id, alocacao.fk_sala, start_dt, end_dt):
             raise HTTPException(status_code=409, detail="Conflito detectado no Google Calendar.")
@@ -245,7 +303,7 @@ class AllocationService(BaseService[Alocacao]):
             end_dt_utc=end_dt,
             location=room.descricao_sala,
             extended_private=extended_props,
-            recurrence_rule=alocacao.recurrency,
+            recurrence_rule=recurrency,
             attendees=attendees,
         )
         if not created or not created.get("id"):
@@ -366,6 +424,27 @@ class AllocationService(BaseService[Alocacao]):
         if "dia_horario_inicio" in update_data and "dia_horario_saida" in update_data:
             if update_data["dia_horario_saida"] <= update_data["dia_horario_inicio"]:
                 raise HTTPException(status_code=400, detail="A data de saída deve ser posterior à data de início.")
+            
+            start_dt_local = update_data["dia_horario_inicio"]
+            end_dt_local = update_data["dia_horario_saida"]
+            dia_semana = update_data.get("dia_semana", alocacao.dia_semana)
+            recurrency = update_data.get("recurrency", alocacao.recurrency)
+            
+            if dia_semana and not recurrency and start_dt_local and end_dt_local:
+                duration = end_dt_local - start_dt_local
+                if duration.total_seconds() > 86400: # > 1 dia
+                    h_end, m_end = end_dt_local.hour, end_dt_local.minute
+                    adjusted_end = start_dt_local.replace(hour=h_end, minute=m_end)
+                    if adjusted_end <= start_dt_local:
+                        adjusted_end += timedelta(days=1)
+                    
+                    until_dt = ensure_utc(end_dt_local).replace(hour=23, minute=59, second=59)
+                    until_str = until_dt.strftime("%Y%m%dT%H%M%SZ")
+                    weekday_code = _WEEKDAY_TO_RRULE.get(dia_semana)
+                    
+                    if weekday_code:
+                        update_data["dia_horario_saida"] = adjusted_end
+                        update_data["recurrency"] = f"RRULE:FREQ=WEEKLY;BYDAY={weekday_code};UNTIL={until_str}"
 
         prev_status = (alocacao.status or "").upper()
         updated = self.repository.update(db, alocacao, update_data)

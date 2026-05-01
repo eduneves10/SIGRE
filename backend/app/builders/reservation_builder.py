@@ -49,6 +49,11 @@ def build_local_event(
             "private": {
                 "fk_sala": str(reservation.fk_sala),
                 "fk_usuario": str(reservation.fk_usuario),
+                "fk_curso": str(reservation.fk_curso or ""),
+                "fk_periodo": str(reservation.fk_periodo or ""),
+                "fk_professor": str(reservation.fk_professor or ""),
+                "fk_disciplina": str(reservation.fk_disciplina or ""),
+                "dia_semana": str(reservation.dia_semana or ""),
                 "tipo": str(reservation.tipo or ""),
                 "uso": str(reservation.uso or ""),
                 "oficio": str(reservation.oficio or ""),
