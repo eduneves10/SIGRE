@@ -30,6 +30,7 @@ const AdminPainel = () => {
     const [showImport, setShowImport] = useState(false)
     const [showForm, setShowForm] = useState(false)
     const [horarioEdit, setHorarioEdit] = useState(null)
+    const [restoreDraft, setRestoreDraft] = useState(false)
     const [activeTab, setActiveTab] = useState(() => {
         const params = new URLSearchParams(window.location.search);
         return params.get('tab') || 'calendario';
@@ -463,7 +464,7 @@ const AdminPainel = () => {
                             </ul>
                         </div>
                         <div className="flex flex-wrap gap-2 justify-end">
-                            <button type="button" onClick={() => { setHorarioEdit(null); setShowForm(true) }}
+                            <button type="button" onClick={() => { setHorarioEdit(null); setRestoreDraft(false); setShowForm(true) }}
                                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-95 transition-opacity"
                                 style={{ background: 'linear-gradient(135deg,#1c1aa3,#4f46e5)' }}>
                                 <Plus size={16} /> Novo horário
@@ -520,7 +521,7 @@ const AdminPainel = () => {
                         }} />
                     </div>
                 )}
-                {activeTab === 'cadastros' && <DataManager />}
+                {activeTab === 'cadastros' && <DataManager onReturnToHorarios={() => { setActiveTab('calendario'); setRestoreDraft(true); setShowForm(true) }} />}
 
                 {activeTab === 'configuracoes' && (
                     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -644,7 +645,7 @@ const AdminPainel = () => {
                     <div className="w-full max-w-2xl max-h-[95vh] overflow-y-auto">
                         <ScheduleForm
                             horarioEdit={horarioEdit}
-                            restoreDraft={false}
+                            restoreDraft={restoreDraft}
                             onGoToCadastros={(tab) => {
                                 sessionStorage.setItem('cadastrosTab', tab)
                                 setActiveTab('cadastros')
