@@ -1,7 +1,71 @@
-import React, { useState, useEffect } from 'react';
-import { Users, GraduationCap, BookOpen, XCircle, UserPlus, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Users, GraduationCap, BookOpen, XCircle, UserPlus, Loader2, Check, X } from 'lucide-react';
 import api from '../../services/api';
 import { getCourses } from '../../services/CourseService';
+
+const TERMOS_PROIBIDOS = ['senha', 'password', '12345', 'qwerty', 'admin', 'teste', 'sigre', 'uepa', 'aluno', 'prof']
+
+function checkPassword(senha) {
+    const v = senha || ''
+    return {
+        length:    v.length >= 12,
+        upper:     /[A-Z]/.test(v),
+        lower:     /[a-z]/.test(v),
+        number:    /\d/.test(v),
+        symbol:    /[^A-Za-z0-9]/.test(v),
+        noForbidden: !TERMOS_PROIBIDOS.some(t => v.toLowerCase().includes(t)),
+    }
+}
+
+function PasswordStrength({ senha }) {
+    const checks = useMemo(() => checkPassword(senha), [senha])
+    if (!senha) return null
+
+    const rules = [
+        { key: 'length',      label: 'Mínimo 12 caracteres' },
+        { key: 'upper',       label: 'Letra maiúscula (A–Z)' },
+        { key: 'lower',       label: 'Letra minúscula (a–z)' },
+        { key: 'number',      label: 'Número (0–9)' },
+        { key: 'symbol',      label: 'Símbolo (!@#$% etc.)' },
+        { key: 'noForbidden', label: 'Sem termos proibidos' },
+    ]
+
+    const allOk = rules.every(r => checks[r.key])
+
+    return (
+        <div style={{
+            marginTop: 8,
+            padding: '10px 12px',
+            borderRadius: 12,
+            background: allOk ? '#f0fdf4' : '#f8fafc',
+            border: `1px solid ${allOk ? '#bbf7d0' : '#e2e8f0'}`,
+            transition: 'all 0.3s ease'
+        }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
+                {rules.map(({ key, label }) => (
+                    <div key={key} style={{
+                        display: 'flex', alignItems: 'center', gap: 5,
+                        fontSize: 11, fontWeight: 600,
+                        color: checks[key] ? '#16a34a' : '#94a3b8',
+                        transition: 'color 0.25s ease'
+                    }}>
+                        <span style={{
+                            width: 16, height: 16, borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                            background: checks[key] ? '#dcfce7' : '#f1f5f9',
+                            transition: 'background 0.25s ease'
+                        }}>
+                            {checks[key]
+                                ? <Check size={9} color="#16a34a" strokeWidth={3} />
+                                : <X size={9} color="#cbd5e1" strokeWidth={3} />}
+                        </span>
+                        {label}
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
 
 const PAPEL_STYLES = {
     aluno:     { label: 'Aluno',     bg: '#ede9fe', color: '#7c3aed' },
@@ -68,6 +132,11 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
             alert('Preencha nome, e-mail e senha.')
             return
         }
+        const pwChecks = checkPassword(senha)
+        if (!Object.values(pwChecks).every(Boolean)) {
+            alert('A senha não atende todos os requisitos de segurança.')
+            return
+        }
         if (papel === 'aluno' && !cursoId) {
             alert('Selecione o curso do aluno.')
             return
@@ -122,6 +191,11 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                         value={formNovo.username} onChange={e => setFormNovo(f => ({ ...f, username: e.target.value }))} />
                     <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Senha inicial" type="password"
                         value={formNovo.senha} onChange={e => setFormNovo(f => ({ ...f, senha: e.target.value }))} />
+                    {formNovo.senha && (
+                        <div className="sm:col-span-2">
+                            <PasswordStrength senha={formNovo.senha} />
+                        </div>
+                    )}
                     <select className="px-3 py-2 rounded-xl border text-sm"
                         value={formNovo.papel} onChange={e => setFormNovo(f => ({ ...f, papel: e.target.value }))}>
                         <option value="aluno">Aluno</option>
