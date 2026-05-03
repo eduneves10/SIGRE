@@ -1,7 +1,71 @@
-import React, { useState, useEffect } from 'react';
-import { Users, GraduationCap, BookOpen, XCircle, UserPlus, Loader2, Pencil } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Users, GraduationCap, BookOpen, XCircle, UserPlus, Loader2, Check, X, Pencil } from 'lucide-react';
 import api from '../../services/api';
 import { getCourses } from '../../services/CourseService';
+
+const TERMOS_PROIBIDOS = ['senha', 'password', '12345', 'qwerty', 'admin', 'teste', 'sigre', 'uepa', 'aluno', 'prof']
+
+function checkPassword(senha) {
+    const v = senha || ''
+    return {
+        length:    v.length >= 12,
+        upper:     /[A-Z]/.test(v),
+        lower:     /[a-z]/.test(v),
+        number:    /\d/.test(v),
+        symbol:    /[^A-Za-z0-9]/.test(v),
+        noForbidden: !TERMOS_PROIBIDOS.some(t => v.toLowerCase().includes(t)),
+    }
+}
+
+function PasswordStrength({ senha }) {
+    const checks = useMemo(() => checkPassword(senha), [senha])
+    if (!senha) return null
+
+    const rules = [
+        { key: 'length',      label: 'Mínimo 12 caracteres' },
+        { key: 'upper',       label: 'Letra maiúscula (A–Z)' },
+        { key: 'lower',       label: 'Letra minúscula (a–z)' },
+        { key: 'number',      label: 'Número (0–9)' },
+        { key: 'symbol',      label: 'Símbolo (!@#$% etc.)' },
+        { key: 'noForbidden', label: 'Sem termos proibidos' },
+    ]
+
+    const allOk = rules.every(r => checks[r.key])
+
+    return (
+        <div style={{
+            marginTop: 8,
+            padding: '10px 12px',
+            borderRadius: 12,
+            background: allOk ? '#f0fdf4' : '#f8fafc',
+            border: `1px solid ${allOk ? '#bbf7d0' : '#e2e8f0'}`,
+            transition: 'all 0.3s ease'
+        }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
+                {rules.map(({ key, label }) => (
+                    <div key={key} style={{
+                        display: 'flex', alignItems: 'center', gap: 5,
+                        fontSize: 11, fontWeight: 600,
+                        color: checks[key] ? '#16a34a' : '#94a3b8',
+                        transition: 'color 0.25s ease'
+                    }}>
+                        <span style={{
+                            width: 16, height: 16, borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                            background: checks[key] ? '#dcfce7' : '#f1f5f9',
+                            transition: 'background 0.25s ease'
+                        }}>
+                            {checks[key]
+                                ? <Check size={9} color="#16a34a" strokeWidth={3} />
+                                : <X size={9} color="#cbd5e1" strokeWidth={3} />}
+                        </span>
+                        {label}
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
 
 const PAPEL_STYLES = {
     aluno:     { label: 'Aluno',     bg: '#ede9fe', color: '#7c3aed' },
@@ -84,32 +148,32 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
 
     const handleCriarUsuario = async (e) => {
         e.preventDefault()
-    const { nome, email, username, senha, papel, matricula, cursoId } = formNovo
-    if (!nome?.trim() || !email?.trim() || !senha?.trim()) {
-        alert('Preencha nome, e-mail e senha.')
-        return
-    }
+        const { nome, email, username, senha, papel, matricula, cursoId } = formNovo
+        if (!nome?.trim() || !email?.trim() || !senha?.trim()) {
+            alert('Preencha nome, e-mail e senha.')
+            return
+        }
 
-    const emailTrimmed = email.trim().toLowerCase()
-    if (papel === 'professor' && !emailTrimmed.endsWith('@uepa.br')) {
-        alert('E-mail de professor deve terminar com @uepa.br')
-        return
-    }
-    if (papel === 'aluno' && !emailTrimmed.endsWith('@aluno.uepa.br')) {
-        alert('E-mail de aluno deve terminar com @aluno.uepa.br')
-        return
-    }
+        const emailTrimmed = email.trim().toLowerCase()
+        if (papel === 'professor' && !emailTrimmed.endsWith('@uepa.br')) {
+            alert('E-mail de professor deve terminar com @uepa.br')
+            return
+        }
+        if (papel === 'aluno' && !emailTrimmed.endsWith('@aluno.uepa.br')) {
+            alert('E-mail de aluno deve terminar com @aluno.uepa.br')
+            return
+        }
 
-    const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/
-    if (!senhaRegex.test(senha)) {
-        alert('A senha deve ter no mínimo 12 caracteres, incluindo maiúsculas, minúsculas, números e um símbolo.')
-        return
-    }
+        const pwChecks = checkPassword(senha)
+        if (!Object.values(pwChecks).every(Boolean)) {
+            alert('A senha não atende todos os requisitos de segurança.')
+            return
+        }
 
-    if (papel === 'aluno' && !cursoId) {
-        alert('Selecione o curso do aluno.')
-        return
-    }
+        if (papel === 'aluno' && !cursoId) {
+            alert('Selecione o curso do aluno.')
+            return
+        }
         setCriando(true)
         try {
             const baseUser = email.split('@')[0].replace(/[^a-zA-Z0-9._-]/g, '') || 'usuario'
@@ -219,6 +283,11 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                     <input className="px-3 py-2 rounded-xl border text-sm" type="password"
                         placeholder="Senha (mín. 12 car., A-z, 0-9, símbolo)"
                         value={formNovo.senha} onChange={e => setFormNovo(f => ({ ...f, senha: e.target.value }))} />
+                    {formNovo.senha && (
+                        <div className="sm:col-span-2">
+                            <PasswordStrength senha={formNovo.senha} />
+                        </div>
+                    )}
                     <select className="px-3 py-2 rounded-xl border text-sm"
                         value={formNovo.papel} onChange={e => setFormNovo(f => ({ ...f, papel: e.target.value }))}>
                         <option value="aluno">Aluno</option>
