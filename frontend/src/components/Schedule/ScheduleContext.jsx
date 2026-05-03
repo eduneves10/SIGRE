@@ -106,6 +106,8 @@ export const ScheduleProvider = ({ children }) => {
     const [professores, setProfessores] = useState([]);
     const [disciplinas, setDisciplinas] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [refreshCount, setRefreshCount] = useState(0);
+    const [periodoAtivo, setPeriodoAtivo] = useState(null);
 
     const recarregarDados = async () => {
         const token = localStorage.getItem('access_token');
@@ -123,8 +125,10 @@ export const ScheduleProvider = ({ children }) => {
                 api.get('/disciplines/'),
             ]);
 
-            setCursos(Array.isArray(resCursos.data) ? resCursos.data : []);
-            setSalas(Array.isArray(resSalas.data) ? resSalas.data : []);
+            const normalize = (arr, idKey) => (Array.isArray(arr) ? arr.map(x => ({ ...x, id: x.id ?? x[idKey] })) : []);
+            
+            setCursos(normalize(resCursos.data, 'idCurso'));
+            setSalas(normalize(resSalas.data, 'idSala'));
             
             const periodosFmt = Array.isArray(resPeriodos.data) 
                 ? resPeriodos.data.map(p => ({
@@ -145,37 +149,63 @@ export const ScheduleProvider = ({ children }) => {
             // Backend returns { items: [...] } for reservations
             const alocItems = resAloc.data?.items || [];
             setHorarios(alocItems.map(aloc => {
-                const priv = aloc.extendedProperties?.private || {};
-                const startStr = aloc.start?.dateTime || '';
-                const endStr = aloc.end?.dateTime || '';
-                
-                const profId = priv.fk_professor;
-                const prof = profsFmt.find(p => String(p.id) === profId);
-                const profNome = prof ? (prof.nome || prof.nomeProf) : '';
+                if (aloc.start && aloc.end) {
+                    const priv = aloc.extendedProperties?.private || {};
+                    const start = new Date(aloc.start.dateTime || aloc.start.date);
+                    const end = new Date(aloc.end.dateTime || aloc.end.date);
+                    const f = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+                    
+                    const profId = priv.fk_professor;
+                    const prof = profsFmt.find(p => String(p.id) === profId);
+                    const profNome = prof ? (prof.nome || prof.nomeProf) : '';
 
+                    return {
+                        id: aloc.id,
+                        diaSemana: priv.dia_semana || '',
+                        horarioInicio: start.getHours().toString().padStart(2, '0') + ':' + start.getMinutes().toString().padStart(2, '0'),
+                        horarioFim: end.getHours().toString().padStart(2, '0') + ':' + end.getMinutes().toString().padStart(2, '0'),
+                        dataInicio: f(start),
+                        dataFim: f(end),
+                        cursoId: parseInt(priv.fk_curso) || null,
+                        salaId: parseInt(priv.fk_sala) || null,
+                        periodoId: parseInt(priv.fk_periodo) || null,
+                        professorId: parseInt(priv.fk_professor) || null,
+                        disciplinaId: parseInt(priv.fk_disciplina) || null,
+                        disciplina: aloc.summary,
+                        professor: profNome,
+                        semestre: priv.fk_periodo ? periodosFmt.find(p => String(p.id) === priv.fk_periodo)?.semestre || '' : '',
+                        status: aloc.status || priv.status || 'PENDING'
+                    };
+                }
+                
                 return {
                     id: aloc.id,
-                    diaSemana: priv.dia_semana || '',
-                    horarioInicio: startStr ? startStr.split('T')[1].substring(0, 5) : '',
-                    horarioFim: endStr ? endStr.split('T')[1].substring(0, 5) : '',
-                    dataInicio: startStr ? startStr.split('T')[0] : '',
-                    dataFim: endStr ? endStr.split('T')[0] : '',
-                    cursoId: parseInt(priv.fk_curso) || null,
-                    salaId: parseInt(priv.fk_sala) || null,
-                    periodoId: parseInt(priv.fk_periodo) || null,
-                    disciplina: aloc.summary || '',
-                    professor: profNome,
-                    semestre: priv.fk_periodo ? periodosFmt.find(p => String(p.id) === priv.fk_periodo)?.semestre || '' : '',
-                    status: aloc.status || priv.status || 'PENDING'
-                }
+                    diaSemana: aloc.diaSemana,
+                    horarioInicio: aloc.horarioInicio,
+                    horarioFim: aloc.horarioFim,
+                    dataInicio: aloc.dataInicio ? aloc.dataInicio.split('T')[0] : '',
+                    dataFim: aloc.dataFim ? aloc.dataFim.split('T')[0] : '',
+                    cursoId: aloc.cursoId,
+                    salaId: aloc.salaId,
+                    periodoId: aloc.periodoId,
+                    disciplina: aloc.disciplina,
+                    professor: aloc.professor,
+                    semestre: aloc.semestre,
+                    status: aloc.status
+                };
             }));
 
+            setProfessores(normalize(resProfs.data, 'idProfessor'));
+            setDisciplinas(normalize(resDiscs.data, 'idDisciplina'));
+
+            console.log("─── DADOS CARREGADOS ───");
+            console.table(resSalas.data);
+            console.table(resProfs.data);
+            console.table(resDiscs.data);
+
+            setRefreshCount(c => c + 1);
         } catch (error) {
             console.error("Erro ao carregar dados:", error);
-            if (error.response) {
-                console.error("Status:", error.response.status);
-                console.error("Data:", error.response.data);
-            }
         } finally {
             setLoading(false);
         }
@@ -188,9 +218,8 @@ export const ScheduleProvider = ({ children }) => {
     const createItem = async (endpoint, data, stateSetter, formatter) => {
         try {
             const response = await api.post(endpoint, data);
-            const novoItem = formatter ? formatter(response.data) : response.data;
-            stateSetter(prev => [...prev, novoItem]);
-            return novoItem.id;
+            await recarregarDados();
+            return response.data.id;
         } catch (error) {
             console.error(`Erro ao criar:`, error);
             alert("Erro ao salvar.");
@@ -207,6 +236,8 @@ export const ScheduleProvider = ({ children }) => {
     const adicionarHorario = async (novoHorario) => {
         try {
             const body = buildReservationApiPayload(disciplinas, professores, novoHorario);
+            console.log("POST /reservations/", body);
+
             if (!body.fk_usuario) {
                 alert('Sessão inválida: faça login novamente.');
                 return;
@@ -214,8 +245,12 @@ export const ScheduleProvider = ({ children }) => {
             await api.post('/reservations/', body);
             recarregarDados();
             alert("Horário salvo!");
+            return true;
         } catch (error) {
-            console.error(error); alert("Erro ao salvar horário.");
+            console.error(error);
+            const msg = error.response?.data?.detail || "Erro ao salvar horário.";
+            alert(typeof msg === 'string' ? msg : "Erro ao salvar horário. Verifique os dados.");
+            return false;
         }
     };
 
@@ -223,10 +258,18 @@ export const ScheduleProvider = ({ children }) => {
         try {
             const baseId = String(id).split(':')[0];
             const body = buildReservationPatchPayload(disciplinas, professores, dados);
+            console.log(`PATCH /reservations/${baseId}`, body);
+
             await api.patch(`/reservations/${baseId}`, body);
             recarregarDados();
             alert("Horário atualizado!");
-        } catch (error) { console.error(error); alert("Erro ao atualizar."); }
+            return true;
+        } catch (error) {
+            console.error(error);
+            const msg = error.response?.data?.detail || "Erro ao atualizar.";
+            alert(typeof msg === 'string' ? msg : "Erro ao atualizar.");
+            return false;
+        }
     }
 
     const [deleteModal, setDeleteModal] = useState({ show: false, id: null, isRecurrent: false });
@@ -256,7 +299,7 @@ export const ScheduleProvider = ({ children }) => {
 
     return (
         <ScheduleContext.Provider value={{
-            cursos, salas, periodos, horarios, professores, disciplinas, loading,
+            cursos, salas, periodos, horarios, professores, disciplinas, periodoAtivo, setPeriodoAtivo, loading, refreshCount,
             adicionarHorario, atualizarHorario, removerHorario,
             adicionarPeriodo, adicionarProfessor, adicionarDisciplina, adicionarCurso, adicionarSala,
             recarregarDados 

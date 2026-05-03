@@ -3,34 +3,32 @@ import { useSchedule } from '../Schedule/ScheduleContext'
 import { getCalendarEvents } from '../../services/GoogleServices'
 import {
     ChevronLeft, ChevronRight, Building2, X,
-    CheckCircle2, XCircle, Clock, BookOpen, User, Plus, Trash2
+    CheckCircle2, XCircle, Clock, BookOpen, User, Plus, Trash2, Filter
 } from 'lucide-react'
 
 // Mapeamento nome do dia (PT) → índice JS (0=Dom, 1=Seg...)
 const DIA_SEMANA_MAP = {
-    'Domingo':  0,
-    'Segunda':  1,
-    'Terça':    2,
-    'Quarta':   3,
-    'Quinta':   4,
-    'Sexta':    5,
-    'Sábado':   6,
+    'Domingo': 0,
+    'Segunda': 1,
+    'Terça': 2,
+    'Quarta': 3,
+    'Quinta': 4,
+    'Sexta': 5,
+    'Sábado': 6,
 }
 
 const MESES_PT = [
-    'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ]
-const DIAS_SEMANA_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
+const DIAS_SEMANA_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
-// Retorna todas as datas do mês em array, precedidas de nulls para alinhar ao dia da semana
 function buildCalendarGrid(year, month) {
-    const firstDay = new Date(year, month, 1).getDay()   // 0=Dom
+    const firstDay = new Date(year, month, 1).getDay()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
     const grid = []
     for (let i = 0; i < firstDay; i++) grid.push(null)
     for (let d = 1; d <= daysInMonth; d++) grid.push(new Date(year, month, d))
-    // Preenche até múltiplo de 7
     while (grid.length % 7 !== 0) grid.push(null)
     return grid
 }
@@ -40,27 +38,36 @@ function dateInRange(date, dataInicio, dataFim) {
     if (!dataInicio && !dataFim) return true
     const d = date.getTime()
     const ini = dataInicio ? new Date(dataInicio + 'T00:00:00').getTime() : -Infinity
-    const fim = dataFim    ? new Date(dataFim    + 'T23:59:59').getTime() :  Infinity
+    const fim = dataFim ? new Date(dataFim + 'T23:59:59').getTime() : Infinity
     return d >= ini && d <= fim
 }
 
 const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
-    const { horarios, salas, cursos, removerHorario } = useSchedule()
-
+    const { horarios, salas, cursos, professores, removerHorario, refreshCount } = useSchedule()
     const today = new Date()
-    const [viewYear,  setViewYear]  = useState(today.getFullYear())
+    const [viewYear, setViewYear] = useState(today.getFullYear())
     const [viewMonth, setViewMonth] = useState(today.getMonth())
     const [selectedDate, setSelectedDate] = useState(null)
     const [filterSala, setFilterSala] = useState('')
+    const [filterCurso, setFilterCurso] = useState('')
+    const [filterProfessor, setFilterProfessor] = useState('')
+    const [googleEvents, setGoogleEvents] = useState([])
     const [googleEventCount, setGoogleEventCount] = useState(null)
 
     useEffect(() => {
         if (!isAdmin) return;
         const anchor = new Date(viewYear, viewMonth, 15)
         getCalendarEvents({ view: 'month', anchor: anchor.toISOString() })
-            .then((r) => setGoogleEventCount(Array.isArray(r.items) ? r.items.length : 0))
-            .catch(() => setGoogleEventCount(null))
-    }, [viewYear, viewMonth, isAdmin])
+            .then((r) => {
+                const items = Array.isArray(r.items) ? r.items : []
+                setGoogleEventCount(items.length)
+                setGoogleEvents(items)
+            })
+            .catch(() => {
+                setGoogleEventCount(null)
+                setGoogleEvents([])
+            })
+    }, [viewYear, viewMonth, isAdmin, refreshCount])
 
     // Navegar mês
     const prevMonth = () => {
@@ -76,29 +83,88 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
 
     const grid = useMemo(() => buildCalendarGrid(viewYear, viewMonth), [viewYear, viewMonth])
 
-    // Para cada data, calcula quais salas estão ocupadas
+    const mapGoogleEvent = (ev) => {
+        const priv = (ev.extendedProperties?.private) || {}
+        const start = new Date(ev.start.dateTime || ev.start.date)
+        const end = new Date(ev.end.dateTime || ev.end.date)
+
+        const f = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+
+        return {
+            id: `google-${ev.id}`,
+            googleId: ev.id,
+            localId: priv.local_reservation_id || null,
+            salaId: priv.fk_sala || 0,
+            cursoId: parseInt(priv.fk_curso) || null,
+            professorId: parseInt(priv.fk_professor) || null,
+            disciplina: ev.summary || 'Evento Externo',
+            professor: priv.professor_nome || '',
+            horarioInicio: start.getHours().toString().padStart(2, '0') + ':' + start.getMinutes().toString().padStart(2, '0'),
+            horarioFim: end.getHours().toString().padStart(2, '0') + ':' + end.getMinutes().toString().padStart(2, '0'),
+            dataInicio: f(start),
+            dataFim: f(end),
+            isGoogleOnly: !priv.local_reservation_id,
+            isLongEvent: (end - start) > 24 * 60 * 60 * 1000
+        }
+    }
+
     const getOcupacoesDoDia = (date) => {
         if (!date) return []
         const diaSemanaIdx = date.getDay()
         const nomeDia = Object.keys(DIA_SEMANA_MAP).find(k => DIA_SEMANA_MAP[k] === diaSemanaIdx)
+        const dTimestamp = date.getTime()
 
-        return horarios.filter(h => {
-            if (h.diaSemana !== nomeDia) return false
-            if (filterSala && h.salaId !== parseInt(filterSala)) return false
-            return dateInRange(date, h.dataInicio, h.dataFim)
-        })
+        const ocupaDia = (h) => {
+            if (!h) return false
+            if (filterSala && String(h.salaId) !== String(filterSala)) return false
+            if (filterCurso && h.cursoId !== parseInt(filterCurso)) return false
+            if (filterProfessor && h.professorId !== parseInt(filterProfessor)) return false
+            
+            // Converte para data simples YYYY-MM-DD para comparação sem hora
+            const y = date.getFullYear()
+            const m = String(date.getMonth() + 1).padStart(2, '0')
+            const d = String(date.getDate()).padStart(2, '0')
+            const dStr = `${y}-${m}-${d}`
+            const iniStr = h.dataInicio
+            const fimStr = h.dataFim
+            
+            if (dStr < iniStr || dStr > fimStr) return false
+
+            // Se for evento recorrente (tem diaSemana), precisa bater
+            // Exceto se for um evento longo (mais de 1 dia de intervalo)
+            const isRecurrent = !!h.diaSemana
+            const isLong = iniStr !== fimStr
+
+            if (isRecurrent && !isLong) {
+                return h.diaSemana === nomeDia
+            }
+
+            return true
+        }
+
+        const locais = horarios.filter(ocupaDia)
+        const idsLocais = new Set(horarios.map(h => String(h.id).split(':')[0]))
+        const googleFiltrados = googleEvents
+            .map(mapGoogleEvent)
+            .filter(ge => {
+                if (ge.localId && idsLocais.has(String(ge.localId))) return false
+                return ocupaDia(ge)
+            })
+
+        return [...locais, ...googleFiltrados]
     }
 
-    // Calcula taxa de ocupação do dia (salas ocupadas / total salas)
     const getDayStats = (date) => {
         if (!date) return null
         const ocupacoes = getOcupacoesDoDia(date)
         const salasOcupadas = new Set(ocupacoes.map(h => h.salaId))
-        const totalSalas = filterSala ? 1 : salas.length
+        const numOcupadas = salasOcupadas.size
+        const totalSalas = filterSala ? 1 : Math.max(salas.length, numOcupadas, 1)
+        
         return {
-            ocupadas: salasOcupadas.size,
+            ocupadas: numOcupadas,
             total: totalSalas,
-            taxa: totalSalas > 0 ? salasOcupadas.size / totalSalas : 0,
+            taxa: numOcupadas / totalSalas,
             horarios: ocupacoes,
         }
     }
@@ -106,17 +172,17 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
     // Cor de fundo da célula baseada na taxa de ocupação
     const getCellStyle = (taxa, isToday, isSelected) => {
         if (isSelected) return { bg: '#1c1aa3', text: 'white', border: '#1c1aa3' }
-        if (isToday)    return { bg: '#eef2ff', text: '#1c1aa3', border: '#818cf8' }
-        if (taxa === 0)        return { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' }
-        if (taxa <= 0.4)       return { bg: '#fefce8', text: '#ca8a04', border: '#fde68a' }
-        if (taxa <= 0.75)      return { bg: '#fff7ed', text: '#ea580c', border: '#fed7aa' }
-        return                        { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' }
+        if (isToday) return { bg: '#eef2ff', text: '#1c1aa3', border: '#818cf8' }
+        if (taxa === 0) return { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' }
+        if (taxa <= 0.4) return { bg: '#fefce8', text: '#ca8a04', border: '#fde68a' }
+        if (taxa <= 0.75) return { bg: '#fff7ed', text: '#ea580c', border: '#fed7aa' }
+        return { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' }
     }
 
     const isToday = (date) =>
         date &&
-        date.getDate()     === today.getDate()     &&
-        date.getMonth()    === today.getMonth()    &&
+        date.getDate() === today.getDate() &&
+        date.getMonth() === today.getMonth() &&
         date.getFullYear() === today.getFullYear()
 
     const isSelected = (date) =>
@@ -133,7 +199,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
         })
 
         return salas
-            .filter(s => !filterSala || s.id === parseInt(filterSala))
+            .filter(s => !filterSala || String(s.id) === String(filterSala))
             .map(s => ({
                 ...s,
                 horarios: (ocupacoesMap[s.id] || []).sort((a, b) =>
@@ -161,21 +227,6 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* Filtro de sala */}
-                    <select
-                        value={filterSala}
-                        onChange={e => { setFilterSala(e.target.value); setSelectedDate(null) }}
-                        className="text-xs px-3 py-2 rounded-lg border-0 bg-white/15 text-white focus:outline-none focus:ring-2 focus:ring-white/30 cursor-pointer"
-                        style={{ colorScheme: 'dark' }}
-                    >
-                        <option value="" className="text-gray-800 bg-white">Todas as salas</option>
-                        {salas.map(s => (
-                            <option key={s.id} value={s.id} className="text-gray-800 bg-white">
-                                {s.nome || s.nomeSala || s.codigo_sala}
-                            </option>
-                        ))}
-                    </select>
-
                     {/* Navegação de mês */}
                     <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1">
                         <button onClick={prevMonth}
@@ -191,6 +242,64 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                         </button>
                     </div>
                 </div>
+            
+            {/* ── Barra de Filtros (Copiada do Mapa de Ocupação) ── */}
+            <div className="px-6 py-3 bg-white border-b border-gray-100 flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 text-gray-400 mr-1">
+                    <Filter size={14} />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Filtros</span>
+                </div>
+
+                {/* Filtro Sala */}
+                <select 
+                    value={filterSala} 
+                    onChange={(e) => { setFilterSala(e.target.value); setSelectedDate(null) }}
+                    className="text-[11px] bg-gray-50 border border-gray-200 text-gray-700 rounded-lg p-1.5 outline-none hover:border-blue-300 transition-colors min-w-[120px]"
+                >
+                    <option value="">Todas as Salas</option>
+                    {salas.map(s => (
+                        <option key={s.id} value={s.id}>{s.nomeSala || s.nome}</option>
+                    ))}
+                </select>
+
+                {/* Filtro Turma/Curso */}
+                <select 
+                    value={filterCurso} 
+                    onChange={(e) => { setFilterCurso(e.target.value); setSelectedDate(null) }}
+                    className="text-[11px] bg-gray-50 border border-gray-200 text-gray-700 rounded-lg p-1.5 outline-none hover:border-blue-300 transition-colors min-w-[120px]"
+                >
+                    <option value="">Todas as Turmas</option>
+                    {cursos.map(c => (
+                        <option key={c.id} value={c.id}>{c.siglaCurso || c.sigla}</option>
+                    ))}
+                </select>
+
+                {/* Filtro Professor */}
+                <select 
+                    value={filterProfessor} 
+                    onChange={(e) => { setFilterProfessor(e.target.value); setSelectedDate(null) }}
+                    className="text-[11px] bg-gray-50 border border-gray-200 text-gray-700 rounded-lg p-1.5 outline-none hover:border-blue-300 transition-colors min-w-[120px]"
+                >
+                    <option value="">Todos os Professores</option>
+                    {professores.map(p => (
+                        <option key={p.id} value={p.id}>{p.nomeProf || p.nome}</option>
+                    ))}
+                </select>
+
+                {/* Limpar Filtros */}
+                {(filterSala || filterCurso || filterProfessor) && (
+                    <button 
+                        onClick={() => {
+                            setFilterSala('');
+                            setFilterCurso('');
+                            setFilterProfessor('');
+                            setSelectedDate(null);
+                        }}
+                        className="text-[10px] font-bold text-red-500 hover:text-red-600 px-2"
+                    >
+                        Limpar
+                    </button>
+                )}
             </div>
 
             {/* ── Legenda de cores ── */}
@@ -232,10 +341,10 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                         {grid.map((date, idx) => {
                             if (!date) return <div key={`empty-${idx}`} />
 
-                            const stats  = getDayStats(date)
+                            const stats = getDayStats(date)
                             const todayFlag = isToday(date)
-                            const selFlag   = isSelected(date)
-                            const style  = getCellStyle(stats.taxa, todayFlag, selFlag)
+                            const selFlag = isSelected(date)
+                            const style = getCellStyle(stats.taxa, todayFlag, selFlag)
                             const isPast = date < today && !todayFlag
 
                             const isTodayHighlight = todayFlag && !selFlag
@@ -252,25 +361,25 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                                     }}
                                 >
                                     {/* Número do dia */}
-                                        <span
+                                    <span
                                         className="text-xs font-black w-6 h-6 flex items-center justify-center rounded-lg mb-1"
                                         style={{
                                             background: isTodayHighlight
-                                            ? '#818cf8'
-                                            : selFlag
-                                            ? 'rgba(255,255,255,0.2)'
-                                            : 'transparent',
+                                                ? '#818cf8'
+                                                : selFlag
+                                                    ? 'rgba(255,255,255,0.2)'
+                                                    : 'transparent',
                                             color: isTodayHighlight
-                                            ? 'white'
-                                            : selFlag
-                                            ? 'white'
-                                            : isPast
-                                            ? '#9ca3af'
-                                            : style.text,
+                                                ? 'white'
+                                                : selFlag
+                                                    ? 'white'
+                                                    : isPast
+                                                        ? '#9ca3af'
+                                                        : style.text,
                                         }}
-                                        >
+                                    >
                                         {date.getDate()}
-                                        </span>
+                                    </span>
 
                                     {/* Mini indicadores de salas */}
                                     {stats.ocupadas > 0 && (
@@ -361,8 +470,8 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                                         background: selectedStats.taxa > 0.75
                                             ? 'linear-gradient(90deg, #dc2626, #ef4444)'
                                             : selectedStats.taxa > 0.4
-                                            ? 'linear-gradient(90deg, #ea580c, #f97316)'
-                                            : 'linear-gradient(90deg, #16a34a, #22c55e)'
+                                                ? 'linear-gradient(90deg, #ea580c, #f97316)'
+                                                : 'linear-gradient(90deg, #16a34a, #22c55e)'
                                     }} />
                             </div>
                         </div>
@@ -388,7 +497,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                                             <Building2 size={13}
                                                 style={{ color: sala.ocupada ? '#dc2626' : '#16a34a' }} />
                                             <span className="text-xs font-bold text-gray-700">{sala.nome || sala.nomeSala || sala.codigo_sala}</span>
-                                            <span className="text-[9px] text-gray-400 capitalize">{sala.tipo}</span>
+                                            <span className="text-[9px] text-gray-400 capitalize">{sala.tipo || sala.tipoSala}</span>
                                         </div>
                                         {sala.ocupada
                                             ? <XCircle size={14} className="text-red-400 shrink-0" />
@@ -429,7 +538,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                                                                     {curso.sigla}
                                                                 </span>
                                                             )}
-                                                            {removerHorario && (
+                                                            {removerHorario && !h.isGoogleOnly && (
                                                                 <button onClick={(e) => { e.stopPropagation(); removerHorario(h.id); }} className="text-gray-300 hover:text-red-500 hover:bg-red-50 rounded p-1 transition-colors mt-auto" title="Excluir alocação">
                                                                     <Trash2 size={12} />
                                                                 </button>

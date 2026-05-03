@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 	GOOGLE_CALENDAR_ID: str = "primary"
 	# Para onde o Google OAuth redireciona o usuário após salvar as credenciais (SPA)
 	FRONTEND_PUBLIC_URL: str = "http://localhost:8080"
+	GOOGLE_CALENDAR_ID: str = "primary"
 
 	# Lista de tipos de sala configuráveis (ex.: ["laboratorio","auditorio"])
 	ROOM_TYPES: list[str] = ["laboratorio","auditorio"]

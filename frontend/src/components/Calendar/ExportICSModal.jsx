@@ -12,8 +12,8 @@ const ExportICSModal = ({ onClose }) => {
 
     const [filters, setFilters] = useState({
         periodoId: periodoAtivo || '',
-        salaId:    '',
-        cursoId:   '',
+        salaId: '',
+        cursoId: '',
         diaSemana: '',
     })
     const [step, setStep] = useState('config') // 'config' | 'done'
@@ -24,9 +24,9 @@ const ExportICSModal = ({ onClose }) => {
     const horariosFiltrados = useMemo(() => {
         return horarios.filter(h => {
             if (filters.periodoId && h.periodoId !== parseInt(filters.periodoId)) return false
-            if (filters.salaId    && h.salaId    !== parseInt(filters.salaId))    return false
-            if (filters.cursoId   && h.cursoId   !== parseInt(filters.cursoId))   return false
-            if (filters.diaSemana && h.diaSemana !== filters.diaSemana)           return false
+            if (filters.salaId && String(h.salaId) !== String(filters.salaId)) return false
+            if (filters.cursoId && h.cursoId !== parseInt(filters.cursoId)) return false
+            if (filters.diaSemana && h.diaSemana !== filters.diaSemana) return false
             return true
         })
     }, [horarios, filters])
@@ -44,7 +44,7 @@ const ExportICSModal = ({ onClose }) => {
         const calName = [
             'SCA UEPA',
             periodo ? periodo.semestre : '',
-            cursos.find(c => c.id === parseInt(filters.cursoId))?.sigla || '',
+            cursos.find(c => c.id === parseInt(filters.cursoId))?.sigla || cursos.find(c => c.id === parseInt(filters.cursoId))?.siglaCurso || '',
             salas.find(s => s.id === parseInt(filters.salaId))?.nome || salas.find(s => s.id === parseInt(filters.salaId))?.nomeSala || salas.find(s => s.id === parseInt(filters.salaId))?.codigo_sala || '',
         ].filter(Boolean).join(' — ')
 
@@ -84,12 +84,11 @@ const ExportICSModal = ({ onClose }) => {
                     <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-left mb-6 space-y-3">
                         <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">Como importar:</p>
                         {[
-                            {app: 'Google Calendar', step: 'Configurações → Importar e exportar → Importar' },
-                            { app: 'Apple Calendar',   step: 'Arquivo → Importar → selecione o .ics' },
-                            { app: 'Outlook',          step: 'Adicionar calendário → Carregar do arquivo' },
-                        ].map(({ icon, app, step }) => (
+                            { app: 'Google Calendar', step: 'Configurações → Importar e exportar → Importar' },
+                            { app: 'Apple Calendar', step: 'Arquivo → Importar → selecione o .ics' },
+                            { app: 'Outlook', step: 'Adicionar calendário → Carregar do arquivo' },
+                        ].map(({ app, step }) => (
                             <div key={app} className="flex items-start gap-2.5">
-                                <span className="text-base">{icon}</span>
                                 <div>
                                     <p className="text-xs font-bold text-gray-700">{app}</p>
                                     <p className="text-xs text-gray-400">{step}</p>
@@ -165,7 +164,7 @@ const ExportICSModal = ({ onClose }) => {
                         <select className={inputClass} value={filters.cursoId} onChange={e => set('cursoId', e.target.value)}>
                             <option value="">Todos</option>
                             {cursos.map(c => (
-                                <option key={c.id} value={c.id}>{c.sigla} — {c.nome}</option>
+                                <option key={c.id} value={c.id}>{c.siglaCurso || c.sigla} — {c.nomeCurso || c.nome}</option>
                             ))}
                         </select>
                     </div>
@@ -197,11 +196,10 @@ const ExportICSModal = ({ onClose }) => {
             </div>
 
             {/* Preview da contagem */}
-            <div className={`rounded-2xl p-4 mb-6 border transition-all duration-200 ${
-                horariosFiltrados.length > 0
+            <div className={`rounded-2xl p-4 mb-6 border transition-all duration-200 ${horariosFiltrados.length > 0
                     ? 'bg-blue-50 border-blue-100'
                     : 'bg-amber-50 border-amber-100'
-            }`}>
+                }`}>
                 <div className="flex items-start gap-3">
                     <Info size={15} className={horariosFiltrados.length > 0 ? 'text-blue-500 mt-0.5' : 'text-amber-500 mt-0.5'} />
                     <div>

@@ -7,7 +7,7 @@ import {
     Plus, LayoutGrid, ClipboardList, Calendar, Database,
     CheckCircle2, XCircle, Clock, Building2, User, Users,
     AlignLeft, ChevronDown, ChevronUp, GraduationCap, BookOpen,
-    Bell, Filter, Search, FileSpreadsheet, AlertTriangle, Settings, Link
+    Bell, Filter, Search, FileSpreadsheet, AlertTriangle, Settings, Link, ArrowRight
 } from 'lucide-react'
 
 // Componentes Internos
@@ -16,7 +16,7 @@ import ScheduleViiew from '../Schedule/ScheduleViiew'
 import DataManager from './DataManager'
 import MonthCalendar from '../Calendar/MonthCalendar'
 import ImportarPlanilha from './ImportarPlanilha'
-import MapaOcupacao from '../MapaOcupacao/MapaOcupacao'
+
 import UserManagement from './UserManagement'
 
 const STATUS_STYLES = {
@@ -32,7 +32,7 @@ const AdminPainel = () => {
     const [horarioEdit, setHorarioEdit] = useState(null)
     const [activeTab, setActiveTab] = useState(() => {
         const params = new URLSearchParams(window.location.search);
-        return params.get('tab') || 'horarios';
+        return params.get('tab') || 'calendario';
     })
 
     const [isGoogleConnected, setIsGoogleConnected] = useState(false)
@@ -221,10 +221,8 @@ const AdminPainel = () => {
     const pendentesUser = usuarios.filter(u => u.status === 'pendente').length
 
     const TABS = [
-        { key: 'horarios', label: 'Horários', Icon: LayoutGrid, badge: null },
-        { key: 'solicitacoes', label: 'Solicitações', Icon: ClipboardList, badge: pendentesSols > 0 ? pendentesSols : null },
         { key: 'calendario', label: 'Calendário', Icon: Calendar, badge: null },
-        { key: 'mapa', label: 'Grade', Icon: Calendar, badge: null },
+        { key: 'solicitacoes', label: 'Solicitações', Icon: ClipboardList, badge: pendentesSols > 0 ? pendentesSols : null },
         { key: 'cadastros', label: 'Cadastros', Icon: Database, badge: null },
         { key: 'usuarios', label: 'Usuários', Icon: Users, badge: pendentesUser > 0 ? pendentesUser : null },
         { key: 'configuracoes', label: 'Configurações', Icon: Settings, badge: null },
@@ -344,7 +342,6 @@ const AdminPainel = () => {
 
             {/* CONTEÚDO PRINCIPAL */}
             <div className="p-8">
-                {activeTab === 'mapa' && <MapaOcupacao />}
 
                 {activeTab === 'usuarios' && (
                     <UserManagement 
@@ -356,50 +353,7 @@ const AdminPainel = () => {
                     />
                 )}
 
-                {activeTab === 'horarios' && (
-                    <div className="space-y-6">
-                        {metrics && (
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase">Alocações</p>
-                                    <p className="text-2xl font-black text-gray-900">{metrics.total ?? 0}</p>
-                                </div>
-                                {Object.entries(metrics.status || {}).slice(0, 3).map(([k, v]) => (
-                                    <div key={k} className="rounded-xl border border-gray-100 bg-white p-4">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase">{k || '—'}</p>
-                                        <p className="text-2xl font-black text-indigo-900">{v}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-indigo-950 space-y-2">
-                            <p className="font-bold text-indigo-900">Registrar aulas e ocupação de salas</p>
-                            <ul className="list-disc pl-5 text-xs text-indigo-900/85 leading-relaxed space-y-1">
-                                <li>
-                                    <strong>Novo horário</strong> abre o assistente completo (período, sala, disciplina, professor e curso), igual à lógica usada na grade.
-                                </li>
-                                <li>
-                                    Na aba <strong>Grade</strong> você preenche a ocupação por turnos e horários — útil para montar várias aulas na mesma sala em sequência.
-                                </li>
-                                <li>
-                                    Pedidos de espaço feitos por alunos ou professores aparecem em <strong>Solicitações</strong> para aprovação ou recusa.
-                                </li>
-                            </ul>
-                        </div>
-                        <div className="flex flex-wrap gap-2 justify-end">
-                            <button type="button" onClick={() => setActiveTab('mapa')}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border-2 border-indigo-200 bg-white text-indigo-800 hover:bg-indigo-50 transition-colors">
-                                <LayoutGrid size={16} /> Abrir grade de ocupação
-                            </button>
-                            <button type="button" onClick={() => { setHorarioEdit(null); setShowForm(true) }}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-95 transition-opacity"
-                                style={{ background: 'linear-gradient(135deg,#1c1aa3,#4f46e5)' }}>
-                                <Plus size={16} /> Novo horário
-                            </button>
-                        </div>
-                        <ScheduleViiew isAdmin={true} />
-                    </div>
-                )}
+
 
                 {activeTab === 'solicitacoes' && (
                     <div className="animate-in fade-in duration-500">
@@ -420,8 +374,11 @@ const AdminPainel = () => {
                                 <div key={s.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-all">
                                     <button onClick={() => setExpandedId(expandedId === s.id ? null : s.id)} className="w-full flex items-center gap-4 p-5 text-left">
                                         <div className="w-1.5 h-10 rounded-full" style={{ background: STATUS_STYLES[s.status].dot }} />
-                                        <div className="flex-1">
-                                            <p className="font-black text-gray-800 text-sm uppercase">{s.solicitante}</p>
+                                        <div className="flex-1 pr-4 min-w-0">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className="font-black text-gray-800 text-sm uppercase truncate">{s.solicitante}</p>
+                                                <p className="text-[10px] font-bold text-gray-400/80 uppercase tracking-widest whitespace-nowrap">{s.criadoEm}</p>
+                                            </div>
                                             <p className="text-xs text-gray-400 mt-0.5">{s.sala} — {s.horario}</p>
                                             <p className="text-[11px] text-gray-500 mt-1">
                                                 Solicitação em: <span className="font-semibold">{s.criadoEm || 'Não informado'}</span>
@@ -460,27 +417,76 @@ const AdminPainel = () => {
                 )}
 
                 {activeTab === 'calendario' && (
-                    <div className="space-y-4">
-                        {!isGoogleConnected && (
-                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3">
-                                <p className="text-sm text-blue-900 font-medium">
-                                    Sincronize reservas aprovadas com sua agenda Google (use credenciais reais no .env do backend).
-                                </p>
+                    <div className="space-y-6">
+                        {metrics && (
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase">Alocações</p>
+                                    <p className="text-2xl font-black text-gray-900">{metrics.total ?? 0}</p>
+                                </div>
+                                {Object.entries(metrics.status || {}).slice(0, 3).map(([k, v]) => (
+                                    <div key={k} className="rounded-xl border border-gray-100 bg-white p-4">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase">{k || '—'}</p>
+                                        <p className="text-2xl font-black text-indigo-900">{v}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-indigo-950 space-y-2">
+                            <p className="font-bold text-indigo-900">Registrar aulas e horários de salas</p>
+                            <ul className="list-disc pl-5 text-xs text-indigo-900/85 leading-relaxed space-y-1">
+                                <li>
+                                    <strong>Novo horário</strong> abre o assistente completo (sala, disciplina, professor e curso).
+                                </li>
+                                <li>
+                                    Pedidos de espaço feitos por alunos ou professores aparecem em <strong>Solicitações</strong> para aprovação ou recusa.
+                                </li>
+                            </ul>
+                        </div>
+                        <div className="flex flex-wrap gap-2 justify-end">
+                            <button type="button" onClick={() => { setHorarioEdit(null); setShowForm(true) }}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-95 transition-opacity"
+                                style={{ background: 'linear-gradient(135deg,#1c1aa3,#4f46e5)' }}>
+                                <Plus size={16} /> Novo horário
+                            </button>
+                        </div>
+
+                        {!isGoogleConnected ? (
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 animate-in fade-in slide-in-from-top-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                                        <Link size={18} className="text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-blue-900 font-bold">Conectar Google Calendar</p>
+                                        <p className="text-xs text-blue-700/70">Sincronize as reservas aprovadas automaticamente com sua agenda.</p>
+                                    </div>
+                                </div>
                                 <button type="button"
-                                    onClick={async () => {
-                                        try {
-                                            await startGoogleCalendarConnect()
-                                        } catch (e) {
-                                            const msg = e?.response?.data?.detail ?? e?.message ?? 'Falha ao conectar'
-                                            alert(typeof msg === 'string' ? msg : 'Configure GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET no servidor.')
-                                        }
-                                    }}
-                                    className="shrink-0 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors">
-                                    Conectar Google Calendar
+                                    onClick={handleConnectGoogle}
+                                    className="shrink-0 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95 flex items-center gap-2">
+                                    Conectar Agora <ArrowRight size={14} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-100 bg-green-50/60 px-4 py-3 animate-in fade-in slide-in-from-top-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                                        <CheckCircle2 size={18} className="text-green-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-green-900 font-bold">Google Calendar Conectado</p>
+                                        <p className="text-xs text-green-700/70">As reservas aprovadas estão sendo sincronizadas automaticamente.</p>
+                                    </div>
+                                </div>
+                                <button type="button"
+                                    onClick={handleDisconnectGoogle}
+                                    className="shrink-0 px-4 py-2 rounded-xl border border-green-200 text-green-700 text-xs font-bold hover:bg-green-100 transition-all">
+                                    Desconectar Agenda
                                 </button>
                             </div>
                         )}
-                        <MonthCalendar isAdmin={true} onAddForDate={(date) => {
+                        <ScheduleViiew isAdmin={true} onAddForDate={(date) => {
                             const year = date.getFullYear();
                             const month = String(date.getMonth() + 1).padStart(2, '0');
                             const day = String(date.getDate()).padStart(2, '0');
