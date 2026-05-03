@@ -29,6 +29,7 @@ class UserService(BaseService[Usuario]):
             user_data.pop("curso")
 
         user_data["senha"] = hash_password(payload.senha)
+        user_data["status"] = "aprovado"
         return self.repository.create(db, user_data)
 
     def update_user(self, db: Session, user_id: int, payload: Any) -> Usuario:
