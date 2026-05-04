@@ -25,6 +25,13 @@ const STATUS_STYLES = {
     recusado: { label: 'Recusado', bg: '#fee2e2', color: '#dc2626', dot: '#ef4444', border: '#fecaca' },
 }
 
+const InfoRow = ({ label, value }) => (
+    <div className="flex items-baseline justify-between gap-2 text-xs">
+        <span className="text-gray-400 font-semibold shrink-0">{label}</span>
+        <span className="text-gray-700 font-medium text-right">{value}</span>
+    </div>
+)
+
 const AdminPainel = () => {
     const { adicionarHorario, atualizarHorario } = useSchedule()
     const [showImport, setShowImport] = useState(false)
@@ -379,39 +386,142 @@ const AdminPainel = () => {
                         </div>
 
                         <div className="space-y-3">
-                            {solicitacoesFiltradas.map(s => (
-                                <div key={s.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-all">
-                                    <button onClick={() => setExpandedId(expandedId === s.id ? null : s.id)} className="w-full flex items-center gap-4 p-5 text-left">
-                                        <div className="w-1.5 h-10 rounded-full" style={{ background: STATUS_STYLES[s.status].dot }} />
-                                        <div className="flex-1 pr-4 min-w-0">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <p className="font-black text-gray-800 text-sm uppercase truncate">{s.solicitante}</p>
-                                                <p className="text-[10px] font-bold text-gray-400/80 uppercase tracking-widest whitespace-nowrap">{s.criadoEm}</p>
-                                            </div>
-                                            <p className="text-xs text-gray-400 mt-0.5">{s.sala} — {s.horario}</p>
-                                        </div>
-                                        {expandedId === s.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </button>
+                            {solicitacoesFiltradas.map(s => {
+                                const st = STATUS_STYLES[s.status] || STATUS_STYLES.pendente
+                                const isExpanded = expandedId === s.id
+                                const papelLabel = s.papel === 'professor' ? 'Professor' : 'Aluno'
+                                const papelColor = s.papel === 'professor' ? { bg: '#dbeafe', color: '#1d4ed8' } : { bg: '#ede9fe', color: '#7c3aed' }
+                                return (
+                                    <div key={s.id} className="bg-white border rounded-2xl overflow-hidden hover:shadow-md transition-all"
+                                        style={{ borderColor: isExpanded ? st.border : '#f3f4f6' }}>
 
-                                    {expandedId === s.id && (
-                                        <div className="px-6 pb-6 pt-2 bg-gray-50/30">
-                                            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-4">
-                                                <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Descrição do Evento</p>
-                                                <p className="text-sm font-bold text-gray-700">{s.motivo}</p>
-                                                <p className="text-sm text-gray-600 mt-1">{s.descricao}</p>
-                                            </div>
-                                            {s.status === 'pendente' && (
-                                                <div className="flex gap-2">
-                                                    <input value={motivoRecusa[s.id] || ''} onChange={e => setMotivoRecusa({ ...motivoRecusa, [s.id]: e.target.value })}
-                                                        placeholder="Motivo da recusa (opcional)" className="flex-1 px-4 text-sm rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-100" />
-                                                    <button onClick={() => handleRecusarSolicitacao(s.id)} className="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-sm border border-red-100">Recusar</button>
-                                                    <button onClick={() => handleCheckAprovar(s)} className="px-5 py-2.5 bg-green-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-green-100">Aprovar</button>
+                                        {/* ── Cabeçalho sempre visível ── */}
+                                        <button onClick={() => setExpandedId(isExpanded ? null : s.id)}
+                                            className="w-full text-left">
+                                            <div className="flex items-stretch">
+                                                {/* Barra colorida de status */}
+                                                <div className="w-1.5 shrink-0 rounded-l-2xl" style={{ background: st.dot }} />
+
+                                                <div className="flex-1 px-5 py-4 min-w-0">
+                                                    {/* Linha 1: nome + badges + data */}
+                                                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                                                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                                            <span className="font-black text-gray-800 text-sm uppercase truncate">{s.solicitante}</span>
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: papelColor.bg, color: papelColor.color }}>{papelLabel}</span>
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: st.bg, color: st.color }}>{st.label}</span>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap shrink-0">{s.criadoEm}</span>
+                                                    </div>
+
+                                                    {/* Linha 2: motivo em destaque */}
+                                                    <p className="text-xs font-semibold text-gray-600 mt-1">{s.motivo}</p>
+
+                                                    {/* Linha 3: chips de info */}
+                                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                                                        {s.sala && (
+                                                            <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                                                                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M3 21V7a2 2 0 012-2h14a2 2 0 012 2v14"/><path d="M9 21V12h6v9"/></svg>
+                                                                {s.sala}
+                                                            </span>
+                                                        )}
+                                                        {s.diaSemana && (
+                                                            <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                                                                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                                                {s.diaSemana}{s.dataEvento ? ` · ${s.dataEvento.split('-').reverse().join('/')}` : ''}
+                                                            </span>
+                                                        )}
+                                                        {s.horario && (
+                                                            <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                                                                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                                                                {s.horario}
+                                                            </span>
+                                                        )}
+                                                        {s.participantes && (
+                                                            <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                                                                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                                                                {s.participantes} participantes
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+
+                                                {/* Ações rápidas + Seta */}
+                                                <div className="flex items-center gap-2 pr-4 pl-2 shrink-0">
+                                                    {s.status === 'pendente' && (
+                                                        <>
+                                                            <button
+                                                                onClick={e => { e.stopPropagation(); handleRecusarSolicitacao(s.id) }}
+                                                                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-200 text-red-500 hover:bg-red-50 transition-colors whitespace-nowrap"
+                                                            >Recusar</button>
+                                                            <button
+                                                                onClick={e => { e.stopPropagation(); handleCheckAprovar(s) }}
+                                                                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 transition-colors whitespace-nowrap shadow-sm"
+                                                            >Aprovar</button>
+                                                        </>
+                                                    )}
+                                                    <span className="text-gray-300">
+                                                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </button>
+
+                                        {/* ── Área expandida ── */}
+                                        {isExpanded && (
+                                            <div className="px-6 pb-6 pt-3 border-t" style={{ borderColor: st.border, background: `${st.bg}20` }}>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                                    {/* Identificação */}
+                                                    <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-2">
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Identificação</p>
+                                                        <InfoRow label="E-mail" value={s.email} />
+                                                        <InfoRow label={s.papel === 'professor' ? 'SIAPE' : 'Matrícula'} value={s.matricula || '—'} />
+                                                        <InfoRow label="Papel" value={papelLabel} />
+                                                    </div>
+
+                                                    {/* Local e horário */}
+                                                    <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-2">
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Local e Horário</p>
+                                                        <InfoRow label="Sala" value={s.sala || '—'} />
+                                                        <InfoRow label="Dia" value={`${s.diaSemana}${s.dataEvento ? ` (${s.dataEvento.split('-').reverse().join('/')})` : ''}`} />
+                                                        <InfoRow label="Horário" value={s.horario} />
+                                                        {s.participantes && <InfoRow label="Participantes" value={s.participantes} />}
+                                                    </div>
+
+                                                    {/* Descrição */}
+                                                    <div className="bg-white rounded-xl border border-gray-100 p-4 sm:col-span-2">
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Descrição do Evento</p>
+                                                        <p className="text-xs font-bold text-gray-700">{s.motivo}</p>
+                                                        <p className="text-sm text-gray-600 mt-1 leading-relaxed">{s.descricao}</p>
+                                                        {s.observacoes && (
+                                                            <>
+                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mt-3 mb-1">Observações</p>
+                                                                <p className="text-sm text-gray-500 italic">{s.observacoes}</p>
+                                                            </>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Motivo de recusa (se aplicável) */}
+                                                    {s.status === 'recusado' && s.motivoRecusa && (
+                                                        <div className="bg-red-50 rounded-xl border border-red-100 p-4 sm:col-span-2">
+                                                            <p className="text-[10px] font-black text-red-400 uppercase tracking-wider mb-1">Motivo da Recusa</p>
+                                                            <p className="text-sm text-red-700">{s.motivoRecusa}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {s.status === 'pendente' && (
+                                                    <div className="flex gap-2">
+                                                        <input value={motivoRecusa[s.id] || ''} onChange={e => setMotivoRecusa({ ...motivoRecusa, [s.id]: e.target.value })}
+                                                            placeholder="Motivo da recusa (opcional)" className="flex-1 px-4 text-sm rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-100" />
+                                                        <button onClick={() => handleRecusarSolicitacao(s.id)} className="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-sm border border-red-100">Recusar</button>
+                                                        <button onClick={() => handleCheckAprovar(s)} className="px-5 py-2.5 bg-green-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-green-100">Aprovar</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })}
                         </div>
                     </div>
                 )}
