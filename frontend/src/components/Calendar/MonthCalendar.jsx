@@ -539,7 +539,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                                                                     {curso.sigla}
                                                                 </span>
                                                             )}
-                                                            {removerHorario && !h.isGoogleOnly && (
+                                                            {isAdmin && removerHorario && !h.isGoogleOnly && (
                                                                 <button onClick={(e) => { e.stopPropagation(); removerHorario(h.id); }} className="text-gray-300 hover:text-red-500 hover:bg-red-50 rounded p-1 transition-colors mt-auto" title="Excluir alocação">
                                                                     <Trash2 size={12} />
                                                                 </button>
