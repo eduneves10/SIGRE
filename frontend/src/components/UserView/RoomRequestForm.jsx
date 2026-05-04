@@ -315,7 +315,7 @@ const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
                                             <option value="">Selecione a sala desejada...</option>
                                             {salas.map(s => (
                                                 <option key={s.id} value={s.id}>
-                                                    {s.nome || s.nomeSala || s.codigo_sala} — {s.tipo === 'laboratorio' ? 'Laboratório' : 'Sala de Aula'}
+                                                    {s.nome || s.nomeSala || s.codigo_sala} — {(s.tipoSala || s.tipo || '').toLowerCase().includes('lab') ? 'Laboratório' : 'Sala de Aula'}
                                                 </option>
                                             ))}
                                         </select>
