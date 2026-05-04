@@ -1,0 +1,23 @@
+# Database
+POSTGRES_DB=alocacoes
+POSTGRES_USER=user
+POSTGRES_PASSWORD=password
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+TZ=America/Belem
+
+# Backend Configuration
+BACKEND_ENV=development
+BACKEND_HOST=0.0.0.0
+BACKEND_PORT=8000
+JWT_SECRET=change_me_super_secret
+
+# Google API Credentials
+GOOGLE_CLIENT_ID=ID_DO_SEU_CLIENT_AQUI.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=SECRET_DO_SEU_CLIENT_AQUI
+GOOGLE_REDIRECT_URI=http://localhost:8000/google/callback
+GOOGLE_CALENDAR_ID=primary
+
+# Frontend Configuration
+FRONTEND_PORT=8080
+# URL pública do front (OAuth Google redireciona após conectar)
+FRONTEND_PUBLIC_URL=http://localhost:8080
