@@ -69,7 +69,7 @@ export const ScheduleProvider = ({ children }) => {
         console.log("Atualizando dados...");
         setLoading(true);
         try {
-            const [resCursos, resSalas, resPeriodos, resAloc, resProfs, resDiscs] = await Promise.all([
+            const settled = await Promise.allSettled([
                 api.get('/courses/'),
                 api.get('/rooms/'),
                 api.get('/periods/'),
@@ -78,8 +78,11 @@ export const ScheduleProvider = ({ children }) => {
                 api.get('/disciplines/'),
             ]);
 
+            const ok = (s) => s.status === 'fulfilled' ? s.value : { data: [] };
+            const [resCursos, resSalas, resPeriodos, resAloc, resProfs, resDiscs] = settled.map(ok);
+
             const normalize = (arr, idKey) => (Array.isArray(arr) ? arr.map(x => ({ ...x, id: x.id ?? x[idKey] })) : []);
-            
+
             setCursos(normalize(resCursos.data, 'idCurso'));
             setSalas(normalize(resSalas.data, 'idSala'));
             
