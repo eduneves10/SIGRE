@@ -74,16 +74,18 @@ const DataManager = ({ onReturnToHorarios }) => {
                             <h3 className="text-base font-black text-gray-900">Gerenciar Cadastros</h3>
                             <p className="text-xs text-gray-400 mt-0.5">Adicione, edite ou remova dados do sistema</p>
                         </div>
-                        <button
-                            onClick={() => setModal({ tipo: activeTab, item: null })}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-xs font-bold hover:opacity-90 transition-all hover:-translate-y-0.5"
-                            style={{
-                                background: `linear-gradient(135deg, ${currentTab?.color}, ${currentTab?.color}cc)`,
-                                boxShadow: `0 4px 12px ${currentTab?.color}35`
-                            }}>
-                            <Plus size={14} />
-                            Novo(a) {currentTab?.singular}
-                        </button>
+                        {activeTab !== 'professores' && (
+                            <button
+                                onClick={() => setModal({ tipo: activeTab, item: null })}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-xs font-bold hover:opacity-90 transition-all hover:-translate-y-0.5"
+                                style={{
+                                    background: `linear-gradient(135deg, ${currentTab?.color}, ${currentTab?.color}cc)`,
+                                    boxShadow: `0 4px 12px ${currentTab?.color}35`
+                                }}>
+                                <Plus size={14} />
+                                Novo(a) {currentTab?.singular}
+                            </button>
+                        )}
                     </div>
 
                     {/* Abas */}

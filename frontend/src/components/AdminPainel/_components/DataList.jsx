@@ -9,11 +9,13 @@ const DataList = ({ list, cfg, activeTab, onEdit, onDelete, onAdd }) => {
                 </div>
                 <p className="text-sm font-bold text-gray-500">Nenhum(a) {cfg.singular.toLowerCase()} cadastrado(a)</p>
                 <p className="text-xs text-gray-400 mt-1 mb-5">Clique no botão abaixo para adicionar</p>
-                <button onClick={onAdd}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-xs font-bold hover:opacity-90 transition-all"
-                    style={{ background: `linear-gradient(135deg, ${cfg.color}, ${cfg.color}cc)` }}>
-                    <Plus size={13} /> Adicionar {cfg.singular.toLowerCase()}
-                </button>
+                {activeTab !== 'professores' && (
+                    <button onClick={onAdd}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-xs font-bold hover:opacity-90 transition-all"
+                        style={{ background: `linear-gradient(135deg, ${cfg.color}, ${cfg.color}cc)` }}>
+                        <Plus size={13} /> Adicionar {cfg.singular.toLowerCase()}
+                    </button>
+                )}
             </div>
         )
     }
