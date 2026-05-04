@@ -8,11 +8,11 @@ const TERMOS_PROIBIDOS = ['senha', 'password', '12345', 'qwerty', 'admin', 'test
 function checkPassword(senha) {
     const v = senha || ''
     return {
-        length:    v.length >= 12,
-        upper:     /[A-Z]/.test(v),
-        lower:     /[a-z]/.test(v),
-        number:    /\d/.test(v),
-        symbol:    /[^A-Za-z0-9]/.test(v),
+        length: v.length >= 12,
+        upper: /[A-Z]/.test(v),
+        lower: /[a-z]/.test(v),
+        number: /\d/.test(v),
+        symbol: /[^A-Za-z0-9]/.test(v),
         noForbidden: !TERMOS_PROIBIDOS.some(t => v.toLowerCase().includes(t)),
     }
 }
@@ -22,11 +22,11 @@ function PasswordStrength({ senha }) {
     if (!senha) return null
 
     const rules = [
-        { key: 'length',      label: 'Mínimo 12 caracteres' },
-        { key: 'upper',       label: 'Letra maiúscula (A–Z)' },
-        { key: 'lower',       label: 'Letra minúscula (a–z)' },
-        { key: 'number',      label: 'Número (0–9)' },
-        { key: 'symbol',      label: 'Símbolo (!@#$% etc.)' },
+        { key: 'length', label: 'Mínimo 12 caracteres' },
+        { key: 'upper', label: 'Letra maiúscula (A–Z)' },
+        { key: 'lower', label: 'Letra minúscula (a–z)' },
+        { key: 'number', label: 'Número (0–9)' },
+        { key: 'symbol', label: 'Símbolo (!@#$% etc.)' },
         { key: 'noForbidden', label: 'Sem termos proibidos' },
     ]
 
@@ -68,7 +68,7 @@ function PasswordStrength({ senha }) {
 }
 
 const PAPEL_STYLES = {
-    aluno:     { label: 'Aluno',     bg: '#ede9fe', color: '#7c3aed' },
+    aluno: { label: 'Aluno', bg: '#ede9fe', color: '#7c3aed' },
     professor: { label: 'Professor', bg: '#dbeafe', color: '#1d4ed8' },
 };
 
@@ -268,7 +268,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                 <p className="text-sm text-gray-500">Controle de acesso e permissões do Campus.</p>
             </div>
 
-                <form onSubmit={handleCriarUsuario} className="rounded-2xl border border-blue-200 bg-blue-50/30 p-5 space-y-3">                
+            <form onSubmit={handleCriarUsuario} className="rounded-2xl border border-blue-200 bg-blue-50/30 p-5 space-y-3">
                 <div className="flex items-center gap-2 text-blue-800 font-bold text-sm mb-1">
                     <UserPlus size={18} /> Novo usuário (admin)
                 </div>
@@ -293,7 +293,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                         <option value="aluno">Aluno</option>
                         <option value="professor">Professor</option>
                     </select>
-                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula (opcional)"                        value={formNovo.matricula} onChange={e => setFormNovo(f => ({ ...f, matricula: e.target.value }))} />
+                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula (opcional)" value={formNovo.matricula} onChange={e => setFormNovo(f => ({ ...f, matricula: e.target.value }))} />
                     {(formNovo.papel === 'aluno' || formNovo.papel === 'professor') && (
                         <div className="sm:col-span-2">
                             <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">Curso {formNovo.papel === 'aluno' ? '(obrigatório para aluno)' : '(opcional)'}</label>
@@ -308,8 +308,8 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                     )}
                 </div>
                 <button type="submit" disabled={criando}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-700 text-white text-sm font-bold hover:bg-blue-800 transition-colors disabled:opacity-50">                    
-                {criando ? <Loader2 size={16} className="animate-spin" /> : null}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-700 text-white text-sm font-bold hover:bg-blue-800 transition-colors disabled:opacity-50">
+                    {criando ? <Loader2 size={16} className="animate-spin" /> : null}
                     Cadastrar usuário
                 </button>
             </form>
