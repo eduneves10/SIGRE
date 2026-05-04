@@ -42,7 +42,7 @@ def test_create_user_admin(client, admin_token_headers, db_session):
     
     user = db_session.query(Usuario).filter(Usuario.email == "staff@test.com").first()
     assert user is not None
-    assert user.status == "pendente" 
+    assert user.status == "aprovado" 
 
 def test_create_user_unauthorized(client):
     payload = {"nome": "Unauth"}
