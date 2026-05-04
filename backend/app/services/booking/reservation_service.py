@@ -327,13 +327,15 @@ class AllocationService(BaseService[Alocacao]):
         """
         if not alocacao.google_event_id:
             return
-        self._require_google_credentials(db, current_user.id)
-        ok = google_calendar.delete_event(db=db, user_id=current_user.id, event_id=alocacao.google_event_id)
-        if not ok:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Não foi possível remover o evento correspondente no Google Calendar.",
-            )
+        try:
+            self._require_google_credentials(db, current_user.id)
+            ok = google_calendar.delete_event(db=db, user_id=current_user.id, event_id=alocacao.google_event_id)
+            if not ok:
+                import logging
+                logging.warning(f"Aviso: Não foi possível remover o evento {alocacao.google_event_id} no Google Calendar. Continuando com a exclusão local.")
+        except Exception as e:
+            import logging
+            logging.warning(f"Exceção ignorada ao tentar remover evento do Google Calendar: {e}")
 
     def approve_reservation(self, db: Session, reservation_id: int, current_user) -> dict:
         alocacao = self.repository.get_by_id(db, reservation_id)
