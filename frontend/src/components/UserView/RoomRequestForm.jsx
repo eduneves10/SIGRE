@@ -11,14 +11,14 @@ import { diasSemana } from '../../data/data'
 
 
 const MOTIVOS = [
-    { value: 'palestra',     label: 'Palestra' },
-    { value: 'reuniao',      label: 'Reunião' },
-    { value: 'evento',       label: 'Evento Acadêmico' },
-    { value: 'defesa',       label: 'Defesa / Apresentação' },
-    { value: 'aula_extra',   label: 'Aula Extra' },
-    { value: 'workshop',     label: 'Workshop / Oficina' },
+    { value: 'palestra', label: 'Palestra' },
+    { value: 'reuniao', label: 'Reunião' },
+    { value: 'evento', label: 'Evento Acadêmico' },
+    { value: 'defesa', label: 'Defesa / Apresentação' },
+    { value: 'aula_extra', label: 'Aula Extra' },
+    { value: 'workshop', label: 'Workshop / Oficina' },
     { value: 'estudo_grupo', label: 'Estudo em Grupo' },
-    { value: 'outro',        label: 'Outro' },
+    { value: 'outro', label: 'Outro' },
 ]
 
 const inputClass = `
@@ -48,57 +48,66 @@ function matriculaParaSolicitacao(me, papel) {
 
 const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
     const { salas, horarios } = useSchedule()
-    const [step, setStep]           = useState(1)
+    const [step, setStep] = useState(1)
     const [submitting, setSubmitting] = useState(false)
-    const [conflito, setConflito]   = useState(null)
-    const [error, setError]         = useState('')
-    const [locked, setLocked]       = useState(null)
+    const [conflito, setConflito] = useState(null)
+    const [error, setError] = useState('')
+    const [locked, setLocked] = useState(null)
     const [loadingProfile, setLoadingProfile] = useState(true)
 
     const [form, setForm] = useState({
-        motivo:        '',
-        descricao:     '',
-        observacoes:   '',
-        salaId:        '',
-        diaSemana:     '',
-        dataEvento:    '',
+        motivo: '',
+        descricao: '',
+        observacoes: '',
+        salaId: '',
+        diaSemana: '',
+        dataEvento: '',
         horarioInicio: '',
-        horarioFim:    '',
+        horarioFim: '',
         participantes: '',
     })
 
     useEffect(() => {
         let cancelled = false
         setLoadingProfile(true)
-        ;(async () => {
-            try {
-                const me = await fetchCurrentUser()
-                if (cancelled) return
-                applyUserProfile(me)
-                const papelEfetivo = userRole || me.papel || 'aluno'
-                setLocked({
-                    solicitante: me.nome || '',
-                    email:       me.email || '',
-                    matricula:   matriculaParaSolicitacao(me, papelEfetivo),
-                })
-            } catch {
-                if (cancelled) return
-                const nome = localStorage.getItem('userName') || ''
-                const email = localStorage.getItem('userEmail') || ''
-                const matAluno = localStorage.getItem('userMatricula') || ''
-                const siape = localStorage.getItem('userSiape') || ''
-                const idDoc =
-                    userRole === 'professor' ? (siape || matAluno) : matAluno
-                setLocked({ solicitante: nome, email, matricula: idDoc })
-            } finally {
-                if (!cancelled) setLoadingProfile(false)
-            }
-        })()
+            ; (async () => {
+                try {
+                    const me = await fetchCurrentUser()
+                    if (cancelled) return
+                    applyUserProfile(me)
+                    const papelEfetivo = userRole || me.papel || 'aluno'
+                    setLocked({
+                        solicitante: me.nome || '',
+                        email: me.email || '',
+                        matricula: matriculaParaSolicitacao(me, papelEfetivo),
+                    })
+                } catch {
+                    if (cancelled) return
+                    const nome = localStorage.getItem('userName') || ''
+                    const email = localStorage.getItem('userEmail') || ''
+                    const matAluno = localStorage.getItem('userMatricula') || ''
+                    const siape = localStorage.getItem('userSiape') || ''
+                    const idDoc =
+                        userRole === 'professor' ? (siape || matAluno) : matAluno
+                    setLocked({ solicitante: nome, email, matricula: idDoc })
+                } finally {
+                    if (!cancelled) setLoadingProfile(false)
+                }
+            })()
         return () => { cancelled = true }
     }, [userRole])
 
+    const DIAS_MAP = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+
     const set = (field, value) => {
-        setForm(prev => ({ ...prev, [field]: value }))
+        setForm(prev => {
+            const updated = { ...prev, [field]: value }
+            if (field === 'dataEvento' && value) {
+                const [y, m, d] = value.split('-').map(Number)
+                updated.diaSemana = DIAS_MAP[new Date(y, m - 1, d).getDay()]
+            }
+            return updated
+        })
         setConflito(null)
         setError('')
     }
@@ -131,19 +140,19 @@ const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
         setError('')
         try {
             const payload = {
-                solicitante:   locked.solicitante,
-                email:         locked.email,
-                matricula:     locked.matricula,
-                papel:         userRole || 'aluno',
-                motivo:        MOTIVOS.find(m => m.value === form.motivo)?.label || form.motivo,
-                descricao:     form.descricao,
-                observacoes:   form.observacoes || null,
+                solicitante: locked.solicitante,
+                email: locked.email,
+                matricula: locked.matricula,
+                papel: userRole || 'aluno',
+                motivo: MOTIVOS.find(m => m.value === form.motivo)?.label || form.motivo,
+                descricao: form.descricao,
+                observacoes: form.observacoes || null,
                 participantes: form.participantes ? parseInt(form.participantes) : null,
-                diaSemana:     form.diaSemana,
-                dataEvento:    form.dataEvento || null,
+                diaSemana: form.diaSemana,
+                dataEvento: form.dataEvento || null,
                 horarioInicio: form.horarioInicio,
-                horarioFim:    form.horarioFim,
-                salaId:        form.salaId,
+                horarioFim: form.horarioFim,
+                salaId: form.salaId,
             }
             const res = await api.post('/solicitations/', payload)
             if (onSolicitacaoCriada) onSolicitacaoCriada(res.data)
@@ -176,9 +185,9 @@ const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
                         A assessoria pedagógica analisará e entrará em contato pelo e-mail <strong>{locked?.email || ''}</strong>.
                     </p>
                     <div className="bg-gray-50 rounded-2xl p-4 mb-8 text-left space-y-2">
-                        <Row label="Motivo"  value={MOTIVOS.find(m => m.value === form.motivo)?.label} />
-                        <Row label="Sala"    value={salaSelecionada?.nome || salaSelecionada?.nomeSala || salaSelecionada?.codigo_sala} />
-                        <Row label="Dia"     value={`${form.diaSemana}${form.dataEvento ? ` (${form.dataEvento.split('-').reverse().join('/')})` : ''}`} />
+                        <Row label="Motivo" value={MOTIVOS.find(m => m.value === form.motivo)?.label} />
+                        <Row label="Sala" value={salaSelecionada?.nome || salaSelecionada?.nomeSala || salaSelecionada?.codigo_sala} />
+                        <Row label="Dia" value={`${form.diaSemana}${form.dataEvento ? ` (${form.dataEvento.split('-').reverse().join('/')})` : ''}`} />
                         <Row label="Horário" value={`${form.horarioInicio} – ${form.horarioFim}`} />
                     </div>
                     <button onClick={onClose}
@@ -315,21 +324,16 @@ const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
                                 </div>
 
                                 <div>
-                                    <label className={labelClass}>Dia da Semana *</label>
-                                    <div className="relative">
-                                        <select className={`${inputClass} appearance-none`} required
-                                            value={form.diaSemana} onChange={e => set('diaSemana', e.target.value)}>
-                                            <option value="">Selecione...</option>
-                                            {diasSemana.map(d => <option key={d} value={d}>{d}</option>)}
-                                        </select>
-                                        <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                    </div>
-                                </div>
-
-                                <div>
                                     <label className={labelClass}>Data do Evento</label>
                                     <input className={inputClass} type="date"
                                         value={form.dataEvento} onChange={e => set('dataEvento', e.target.value)} />
+                                </div>
+
+                                <div>
+                                    <label className={labelClass}>Dia da Semana *</label>
+                                    <div className={`${readonlyBoxClass} h-[42px] flex items-center`}>
+                                        {form.diaSemana || <span className="text-gray-400 text-sm">Preenchido com a data</span>}
+                                    </div>
                                 </div>
 
                                 <div>
