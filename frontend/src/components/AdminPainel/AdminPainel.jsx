@@ -124,7 +124,7 @@ const AdminPainel = () => {
                 salaId: s.salaId,
                 diaSemana: s.diaSemana,
                 dataEvento: s.dataEvento || '',
-                horario: `${s.horarioInicio} – ${s.horarioFim}`,
+                horario: `${s.horarioInicio?.slice(0, 5)} – ${s.horarioFim?.slice(0, 5)}`,
                 horarioInicio: s.horarioInicio,
                 horarioFim: s.horarioFim,
                 participantes: s.participantes,
@@ -372,20 +372,39 @@ const AdminPainel = () => {
                         <div className="space-y-3">
                             {solicitacoesFiltradas.map(s => (
                                 <div key={s.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-all">
-                                    <button onClick={() => setExpandedId(expandedId === s.id ? null : s.id)} className="w-full flex items-center gap-4 p-5 text-left">
-                                        <div className="w-1.5 h-10 rounded-full" style={{ background: STATUS_STYLES[s.status].dot }} />
-                                        <div className="flex-1 pr-4 min-w-0">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <p className="font-black text-gray-800 text-sm uppercase truncate">{s.solicitante}</p>
-                                                <p className="text-[10px] font-bold text-gray-400/80 uppercase tracking-widest whitespace-nowrap">{s.criadoEm}</p>
-                                            </div>
-                                            <p className="text-xs text-gray-400 mt-0.5">{s.sala} — {s.horario}</p>
-                                            <p className="text-[11px] text-gray-500 mt-1">
-                                                Solicitação em: <span className="font-semibold">{s.criadoEm || 'Não informado'}</span>
+                                <button onClick={() => setExpandedId(expandedId === s.id ? null : s.id)} className="w-full flex items-center gap-4 px-5 py-4 text-left">
+                                    <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: STATUS_STYLES[s.status].dot }} />
+                                    <div className="flex-1 min-w-0">
+                                        {/* Linha 1: nome + badge de status */}
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <p className="font-black text-gray-800 text-sm uppercase">{s.solicitante}</p>
+                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                                style={{ background: STATUS_STYLES[s.status].bg, color: STATUS_STYLES[s.status].color }}>
+                                                {STATUS_STYLES[s.status].label}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
+                                            <Building2 size={11} className="shrink-0 text-gray-400" />
+                                            {s.sala}
+                                            <span className="text-gray-300">·</span>
+                                            <Clock size={11} className="shrink-0 text-gray-400" />
+                                            {s.horario}
+                                        </p>
+                                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                                            {(s.diaSemana || s.dataEvento) && (
+                                                <p className="text-[11px] text-indigo-500 font-semibold flex items-center gap-1">
+                                                    <Calendar size={11} className="shrink-0" />
+                                                    {s.diaSemana}{s.dataEvento ? `, ${s.dataEvento}` : ''}
+                                                </p>
+                                            )}
+                                            <p className="text-[11px] text-gray-400 flex items-center gap-1">
+                                                <AlignLeft size={11} className="shrink-0" />
+                                                Solicitado em {s.criadoEm}
                                             </p>
                                         </div>
-                                        {expandedId === s.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </button>
+                                    </div>
+                                    {expandedId === s.id ? <ChevronUp size={16} className="text-gray-400 shrink-0" /> : <ChevronDown size={16} className="text-gray-400 shrink-0" />}
+                                </button>
 
                                     {expandedId === s.id && (
                                         <div className="px-6 pb-6 pt-2 bg-gray-50/30">

@@ -61,7 +61,7 @@ const UserView = ({ userRole, onLogOut }) => {
         sala:     s.sala?.nome || s.sala?.nomeSala || s.sala?.codigo_sala || '',
         diaSemana: s.diaSemana,
         data:     s.dataEvento || '',
-        horario:  `${s.horarioInicio} – ${s.horarioFim}`,
+        horario: `${s.horarioInicio?.slice(0, 5)} – ${s.horarioFim?.slice(0, 5)}`,
         status:   s.status,
         criadoEm: s.criadoEm,
         motivoRecusa: s.motivoRecusa,
@@ -203,10 +203,16 @@ const UserView = ({ userRole, onLogOut }) => {
                                                         </span>
                                                     </div>
                                                     <p className="text-sm text-gray-600 mb-3">{s.descricao}</p>
-                                                    <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-                                                        <span className="flex items-center gap-1"><Building2 size={12} />{s.sala}</span>
-                                                        <span className="flex items-center gap-1"><Calendar size={12} />{s.diaSemana}{s.data ? `, ${s.data}` : ''}</span>
-                                                        <span className="flex items-center gap-1"><Clock size={12} />{s.horario}</span>
+                                                    <div className="flex flex-wrap gap-3 text-xs text-gray-500 mt-2">
+                                                        <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-1">
+                                                            <Building2 size={11} className="text-gray-400" />{s.sala}
+                                                        </span>
+                                                        <span className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 rounded-lg px-2.5 py-1 text-indigo-600 font-medium">
+                                                            <Calendar size={11} />{s.diaSemana}{s.data ? `, ${s.data}` : ''}
+                                                        </span>
+                                                        <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-1">
+                                                            <Clock size={11} className="text-gray-400" />{s.horario}
+                                                        </span>
                                                     </div>
                                                     {/* Motivo de recusa */}
                                                     {s.status === 'recusado' && s.motivoRecusa && (

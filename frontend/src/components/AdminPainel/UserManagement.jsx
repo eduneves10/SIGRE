@@ -84,15 +84,32 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
 
     const handleCriarUsuario = async (e) => {
         e.preventDefault()
-        const { nome, email, username, senha, papel, matricula, cursoId } = formNovo
-        if (!nome?.trim() || !email?.trim() || !senha?.trim()) {
-            alert('Preencha nome, e-mail e senha.')
-            return
-        }
-        if (papel === 'aluno' && !cursoId) {
-            alert('Selecione o curso do aluno.')
-            return
-        }
+    const { nome, email, username, senha, papel, matricula, cursoId } = formNovo
+    if (!nome?.trim() || !email?.trim() || !senha?.trim()) {
+        alert('Preencha nome, e-mail e senha.')
+        return
+    }
+
+    const emailTrimmed = email.trim().toLowerCase()
+    if (papel === 'professor' && !emailTrimmed.endsWith('@uepa.br')) {
+        alert('E-mail de professor deve terminar com @uepa.br')
+        return
+    }
+    if (papel === 'aluno' && !emailTrimmed.endsWith('@aluno.uepa.br')) {
+        alert('E-mail de aluno deve terminar com @aluno.uepa.br')
+        return
+    }
+
+    const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/
+    if (!senhaRegex.test(senha)) {
+        alert('A senha deve ter no mínimo 12 caracteres, incluindo maiúsculas, minúsculas, números e um símbolo.')
+        return
+    }
+
+    if (papel === 'aluno' && !cursoId) {
+        alert('Selecione o curso do aluno.')
+        return
+    }
         setCriando(true)
         try {
             const baseUser = email.split('@')[0].replace(/[^a-zA-Z0-9._-]/g, '') || 'usuario'
@@ -187,26 +204,27 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                 <p className="text-sm text-gray-500">Controle de acesso e permissões do Campus.</p>
             </div>
 
-            <form onSubmit={handleCriarUsuario} className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 space-y-3">
-                <div className="flex items-center gap-2 text-indigo-900 font-bold text-sm">
+                <form onSubmit={handleCriarUsuario} className="rounded-2xl border border-blue-200 bg-blue-50/30 p-5 space-y-3">                
+                <div className="flex items-center gap-2 text-blue-800 font-bold text-sm mb-1">
                     <UserPlus size={18} /> Novo usuário (admin)
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                     <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Nome completo"
                         value={formNovo.nome} onChange={e => setFormNovo(f => ({ ...f, nome: e.target.value }))} />
-                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="E-mail" type="email"
+                    <input className="px-3 py-2 rounded-xl border text-sm" type="email"
+                        placeholder={formNovo.papel === 'professor' ? 'E-mail (@uepa.br)' : 'E-mail (@aluno.uepa.br)'}
                         value={formNovo.email} onChange={e => setFormNovo(f => ({ ...f, email: e.target.value }))} />
-                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Username (opcional)"
+                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Nome de Usuário (opcional)"
                         value={formNovo.username} onChange={e => setFormNovo(f => ({ ...f, username: e.target.value }))} />
-                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Senha inicial" type="password"
+                    <input className="px-3 py-2 rounded-xl border text-sm" type="password"
+                        placeholder="Senha (mín. 12 car., A-z, 0-9, símbolo)"
                         value={formNovo.senha} onChange={e => setFormNovo(f => ({ ...f, senha: e.target.value }))} />
                     <select className="px-3 py-2 rounded-xl border text-sm"
                         value={formNovo.papel} onChange={e => setFormNovo(f => ({ ...f, papel: e.target.value }))}>
                         <option value="aluno">Aluno</option>
                         <option value="professor">Professor</option>
                     </select>
-                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula / SIAPE (opcional)"
-                        value={formNovo.matricula} onChange={e => setFormNovo(f => ({ ...f, matricula: e.target.value }))} />
+                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula (opcional)"                        value={formNovo.matricula} onChange={e => setFormNovo(f => ({ ...f, matricula: e.target.value }))} />
                     {(formNovo.papel === 'aluno' || formNovo.papel === 'professor') && (
                         <div className="sm:col-span-2">
                             <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">Curso {formNovo.papel === 'aluno' ? '(obrigatório para aluno)' : '(opcional)'}</label>
@@ -221,8 +239,8 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                     )}
                 </div>
                 <button type="submit" disabled={criando}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-bold disabled:opacity-50">
-                    {criando ? <Loader2 size={16} className="animate-spin" /> : null}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-700 text-white text-sm font-bold hover:bg-blue-800 transition-colors disabled:opacity-50">                    
+                {criando ? <Loader2 size={16} className="animate-spin" /> : null}
                     Cadastrar usuário
                 </button>
             </form>
