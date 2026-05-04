@@ -5,18 +5,16 @@ import ExportICSModal from '../Calendar/ExportICSModal'
 import OccupancyMap from './OccupancyMap'
 import { Calendar, Download, X, Map } from 'lucide-react'
 
-const ScheduleViiew = ({ isAdmin = false }) => {
+const ScheduleViiew = ({ isAdmin = false, onAddForDate }) => {
     const { cursos, periodos, periodoAtivo } = useSchedule()
+    const periodoAtual = periodos.find(p => p.id === parseInt(periodoAtivo));
+    const formatarData = (isoStr) => {
+        if (!isoStr) return '';
+        const [y, m, d] = isoStr.split('T')[0].split('-');
+        return `${d}/${m}/${y}`;
+    }
     const [showExport, setShowExport] = useState(false)
     const [showMap, setShowMap] = useState(false)
-
-    const periodoAtual = periodos.find(p => p.id === periodoAtivo)
-
-    const formatarData = (dataISO) => {
-        if (!dataISO) return ''
-        const [, mes, dia] = dataISO.split('-')
-        return `${dia}/${mes}`
-    }
 
     return (
         <div className='bg-white rounded-lg shadow-sm p-8'>
@@ -79,7 +77,7 @@ const ScheduleViiew = ({ isAdmin = false }) => {
             </div>
 
             {/* ── View: Calendário ── */}
-            <MonthCalendar />
+            <MonthCalendar isAdmin={isAdmin} onAddForDate={onAddForDate} />
 
             {/* ── Modal de exportação .ics ── */}
             {showExport && (

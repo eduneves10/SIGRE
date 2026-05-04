@@ -3,8 +3,7 @@ import { useSchedule } from '../Schedule/ScheduleContext'
 import { getCalendarEvents } from '../../services/GoogleServices'
 import {
     ChevronLeft, ChevronRight, Building2, X,
-    CheckCircle2, XCircle, Clock, BookOpen, User, Trash2,
-    Filter
+    CheckCircle2, XCircle, Clock, BookOpen, User, Plus, Trash2, Filter
 } from 'lucide-react'
 
 // Mapeamento nome do dia (PT) → índice JS (0=Dom, 1=Seg...)
@@ -43,7 +42,7 @@ function dateInRange(date, dataInicio, dataFim) {
     return d >= ini && d <= fim
 }
 
-const MonthCalendar = () => {
+const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
     const { horarios, salas, cursos, professores, removerHorario, refreshCount } = useSchedule()
     const today = new Date()
     const [viewYear, setViewYear] = useState(today.getFullYear())
@@ -56,6 +55,7 @@ const MonthCalendar = () => {
     const [googleEventCount, setGoogleEventCount] = useState(null)
 
     useEffect(() => {
+        if (!isAdmin) return;
         const anchor = new Date(viewYear, viewMonth, 15)
         getCalendarEvents({ view: 'month', anchor: anchor.toISOString() })
             .then((r) => {
@@ -67,7 +67,7 @@ const MonthCalendar = () => {
                 setGoogleEventCount(null)
                 setGoogleEvents([])
             })
-    }, [viewYear, viewMonth, refreshCount])
+    }, [viewYear, viewMonth, isAdmin, refreshCount])
 
     // Navegar mês
     const prevMonth = () => {
@@ -226,6 +226,7 @@ const MonthCalendar = () => {
                     )}
                 </div>
 
+                <div className="flex items-center gap-3">
                     {/* Navegação de mês */}
                     <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1">
                         <button onClick={prevMonth}
@@ -241,7 +242,8 @@ const MonthCalendar = () => {
                         </button>
                     </div>
                 </div>
-            
+            </div>
+
             {/* ── Barra de Filtros (Copiada do Mapa de Ocupação) ── */}
             <div className="px-6 py-3 bg-white border-b border-gray-100 flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 text-gray-400 mr-1">
@@ -430,10 +432,18 @@ const MonthCalendar = () => {
                                     {selectedDate.getDate()} de {MESES_PT[selectedDate.getMonth()]}
                                 </p>
                             </div>
-                            <button onClick={() => setSelectedDate(null)}
-                                className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-400 transition-colors">
-                                <X size={14} />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {onAddForDate && (
+                                    <button onClick={() => onAddForDate(selectedDate)}
+                                        className="w-7 h-7 flex items-center justify-center rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-600 transition-colors" title="Adicionar alocação neste dia">
+                                        <Plus size={14} />
+                                    </button>
+                                )}
+                                <button onClick={() => setSelectedDate(null)}
+                                    className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-400 transition-colors">
+                                    <X size={14} />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Resumo */}
@@ -487,8 +497,8 @@ const MonthCalendar = () => {
                                         <div className="flex items-center gap-2">
                                             <Building2 size={13}
                                                 style={{ color: sala.ocupada ? '#dc2626' : '#16a34a' }} />
-                                            <span className="text-xs font-bold text-gray-700">{sala.nomeSala || sala.nome}</span>
-                                            <span className="text-[9px] text-gray-400 capitalize">{sala.tipoSala || sala.tipo}</span>
+                                            <span className="text-xs font-bold text-gray-700">{sala.nome || sala.nomeSala || sala.codigo_sala}</span>
+                                            <span className="text-[9px] text-gray-400 capitalize">{sala.tipo || sala.tipoSala}</span>
                                         </div>
                                         {sala.ocupada
                                             ? <XCircle size={14} className="text-red-400 shrink-0" />
@@ -522,17 +532,15 @@ const MonthCalendar = () => {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <div className="flex flex-col items-end justify-between ml-2">
+                                                        <div className="flex flex-col items-end gap-1">
                                                             {curso && (
                                                                 <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0"
                                                                     style={{ background: curso.cor + '20', color: curso.cor }}>
                                                                     {curso.sigla}
                                                                 </span>
                                                             )}
-                                                            {!h.isGoogleOnly && (
-                                                                <button onClick={() => removerHorario(h.id)}
-                                                                    className="mt-1 text-red-400 hover:text-red-600 transition-colors"
-                                                                    title="Excluir Reserva">
+                                                            {removerHorario && !h.isGoogleOnly && (
+                                                                <button onClick={(e) => { e.stopPropagation(); removerHorario(h.id); }} className="text-gray-300 hover:text-red-500 hover:bg-red-50 rounded p-1 transition-colors mt-auto" title="Excluir alocação">
                                                                     <Trash2 size={12} />
                                                                 </button>
                                                             )}

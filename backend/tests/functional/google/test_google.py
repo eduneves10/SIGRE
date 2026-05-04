@@ -31,14 +31,15 @@ def test_google_connect_depends_on_env(client, admin_token_headers):
 
 
 @patch("app.routers.google.Flow")
-@patch("app.routers.google.get_settings")
-def test_google_connect_returns_auth_url(mock_get_settings, mock_flow_cls, client, admin_token_headers):
-    mock_get_settings.return_value = MagicMock(
-        GOOGLE_CLIENT_ID="test-client-id.apps.googleusercontent.com",
-        GOOGLE_CLIENT_SECRET="test-secret",
-        GOOGLE_REDIRECT_URI="http://localhost:8000/google/callback",
-        GOOGLE_TOKEN_URI="https://oauth2.googleapis.com/token",
-    )
+def test_google_connect_returns_auth_url(mock_flow_cls, client, admin_token_headers, monkeypatch):
+    """Ensure OAuth config exists: get_settings is lru_cached and Depends() keeps the real callable, so env + cache_clear is reliable in CI."""
+    from app.config import get_settings
+
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "test-client-id.apps.googleusercontent.com")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "test-secret")
+    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/google/callback")
+    get_settings.cache_clear()
+
     flow = MagicMock()
     flow.authorization_url.return_value = ("https://accounts.google.com/o/oauth2/auth?test=1", "state-xyz")
     mock_flow_cls.from_client_config.return_value = flow

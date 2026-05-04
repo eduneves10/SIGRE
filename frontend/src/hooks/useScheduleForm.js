@@ -103,11 +103,10 @@ export const useScheduleForm = ({
             if (!form.salaId) newErrors.salaId = 'Selecione uma sala ou laboratório'
         }
         if (s === 3) {
-            if (!form.disciplinaId) newErrors.disciplinaId = 'Selecione a disciplina'
-            if (!form.cursoId) newErrors.cursoId = 'Selecione o curso'
+            // Disciplina e Curso agora são opcionais
         }
         if (s === 4) {
-            if (!form.professorId) newErrors.professorId = 'Selecione o professor responsável'
+            // Professor é opcional
         }
 
         setErrors(newErrors)
@@ -133,11 +132,11 @@ export const useScheduleForm = ({
         setIsSaving(true)
         try {
             const payload = {
-                cursoId: parseInt(form.cursoId),
+                cursoId: parseInt(form.cursoId) || null,
                 salaId: form.salaId,
-                professorId: parseInt(form.professorId),
-                disciplinaId: parseInt(form.disciplinaId),
-                periodoId: parseInt(form.periodoId),
+                professorId: parseInt(form.professorId) || null,
+                disciplinaId: parseInt(form.disciplinaId) || null,
+                periodoId: parseInt(form.periodoId) || null,
                 diaSemana: form.diaSemana,
                 horarioInicio: form.horarioInicio,
                 horarioFim: form.horarioFim,

@@ -10,30 +10,39 @@ def test_list_rooms_invalid_token(client):
     response = client.get("/rooms/", headers={"Authorization": "Bearer invalid"})
     assert response.status_code == 401
     
-def test_create_room(client, admin_token_headers):
+def test_create_room(client, admin_token_headers, db_session):
+    room_type = db_session.query(TipoSala).first()
+    if not room_type:
+        room_type = TipoSala(nome="Lab")
+        db_session.add(room_type)
+        db_session.commit()
+        db_session.refresh(room_type)
     payload = {
-        "nomeSala": 101,
+        "nomeSala": "101",
+        "tipoSalaId": room_type.id,
         "descricao_sala": "Laboratório de Redes",
         "capacidade": 30
     }
     response = client.post("/rooms/", json=payload, headers=admin_token_headers)
     assert response.status_code == 201
     data = response.json()
-    assert data["nomeSala"] == 101
+    assert data["nomeSala"] == "101"
     assert data["capacidade"] == 30
 
 def test_create_room_unauthorized(client):
     payload = {
-        "nomeSala": 102,
+        "nomeSala": "102",
         "descricao_sala": "Unauthorized",
         "capacidade": 20
     }
     response = client.post("/rooms/", json=payload)
     assert response.status_code == 401
 
-def test_create_room_duplicate_code(client, admin_token_headers):
+def test_create_room_duplicate_code(client, admin_token_headers, db_session):
+    room_type = db_session.query(TipoSala).first()
     payload = {
-        "nomeSala": 501,
+        "nomeSala": "501",
+        "tipoSalaId": room_type.id,
         "descricao_sala": "Room 501",
         "capacidade": 30
     }
@@ -50,7 +59,7 @@ def test_list_rooms_authorized(client, admin_token_headers):
     assert len(data) >= 1
 
 def test_update_room(client, admin_token_headers, db_session):
-    room = db_session.query(Sala).filter(Sala.codigo_sala == 101).first()
+    room = db_session.query(Sala).filter(Sala.codigo_sala == "101").first()
     assert room is not None
     
     payload = {
@@ -76,7 +85,7 @@ def test_update_non_existent_room(client, admin_token_headers):
     assert response.status_code == 404
 
 def test_delete_room(client, admin_token_headers, db_session):
-    room = db_session.query(Sala).filter(Sala.codigo_sala == 101).first()
+    room = db_session.query(Sala).filter(Sala.codigo_sala == "101").first()
     
     response = client.delete(f"/rooms/{room.id}", headers=admin_token_headers)
     assert response.status_code == 204

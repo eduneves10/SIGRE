@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Users, GraduationCap, BookOpen, XCircle, UserPlus, Loader2, Check, X } from 'lucide-react';
+import { Users, GraduationCap, BookOpen, XCircle, UserPlus, Loader2, Check, X, Pencil } from 'lucide-react';
 import api from '../../services/api';
 import { getCourses } from '../../services/CourseService';
 
@@ -8,11 +8,11 @@ const TERMOS_PROIBIDOS = ['senha', 'password', '12345', 'qwerty', 'admin', 'test
 function checkPassword(senha) {
     const v = senha || ''
     return {
-        length:    v.length >= 12,
-        upper:     /[A-Z]/.test(v),
-        lower:     /[a-z]/.test(v),
-        number:    /\d/.test(v),
-        symbol:    /[^A-Za-z0-9]/.test(v),
+        length: v.length >= 12,
+        upper: /[A-Z]/.test(v),
+        lower: /[a-z]/.test(v),
+        number: /\d/.test(v),
+        symbol: /[^A-Za-z0-9]/.test(v),
         noForbidden: !TERMOS_PROIBIDOS.some(t => v.toLowerCase().includes(t)),
     }
 }
@@ -22,11 +22,11 @@ function PasswordStrength({ senha }) {
     if (!senha) return null
 
     const rules = [
-        { key: 'length',      label: 'Mínimo 12 caracteres' },
-        { key: 'upper',       label: 'Letra maiúscula (A–Z)' },
-        { key: 'lower',       label: 'Letra minúscula (a–z)' },
-        { key: 'number',      label: 'Número (0–9)' },
-        { key: 'symbol',      label: 'Símbolo (!@#$% etc.)' },
+        { key: 'length', label: 'Mínimo 12 caracteres' },
+        { key: 'upper', label: 'Letra maiúscula (A–Z)' },
+        { key: 'lower', label: 'Letra minúscula (a–z)' },
+        { key: 'number', label: 'Número (0–9)' },
+        { key: 'symbol', label: 'Símbolo (!@#$% etc.)' },
         { key: 'noForbidden', label: 'Sem termos proibidos' },
     ]
 
@@ -68,11 +68,11 @@ function PasswordStrength({ senha }) {
 }
 
 const PAPEL_STYLES = {
-    aluno:     { label: 'Aluno',     bg: '#ede9fe', color: '#7c3aed' },
+    aluno: { label: 'Aluno', bg: '#ede9fe', color: '#7c3aed' },
     professor: { label: 'Professor', bg: '#dbeafe', color: '#1d4ed8' },
 };
 
-const UsuarioCard = ({ u, onAprovar, onRecusar, onDeletar, showAprovar, showDesativar, showReativar }) => {
+const UsuarioCard = ({ u, onAprovar, onRecusar, onDeletar, onVisualizar, showAprovar, showDesativar, showReativar }) => {
     const PapelIcon = u.papel === 'professor' ? BookOpen : GraduationCap;
     const papelCfg = PAPEL_STYLES[u.papel] || PAPEL_STYLES.aluno;
 
@@ -94,6 +94,12 @@ const UsuarioCard = ({ u, onAprovar, onRecusar, onDeletar, showAprovar, showDesa
                 </div>
             </div>
             <div className="flex gap-2 ml-4">
+                <button
+                    onClick={() => onVisualizar(u)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                >
+                    Ver/Editar
+                </button>
                 {showAprovar && (
                     <>
                         <button onClick={() => onRecusar(u.id)} className="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-200 text-red-500 hover:bg-red-50">Recusar</button>
@@ -116,7 +122,22 @@ const UsuarioCard = ({ u, onAprovar, onRecusar, onDeletar, showAprovar, showDesa
 
 export default function UserManagement({ usuarios, onAprovar, onRecusar, onDeletar, onUsuarioCriado }) {
     const [criando, setCriando] = useState(false)
+    const [salvandoEdicao, setSalvandoEdicao] = useState(false)
     const [cursos, setCursos] = useState([])
+    const [usuarioSelecionado, setUsuarioSelecionado] = useState(null)
+    const [formEdicao, setFormEdicao] = useState({
+        nome: '',
+        email: '',
+        username: '',
+        telefone: '',
+        papel: 'aluno',
+        matricula: '',
+        siape: '',
+        departamento: '',
+        status: 'pendente',
+        cursoId: '',
+        senha: '',
+    })
     const [formNovo, setFormNovo] = useState({
         nome: '', email: '', username: '', senha: '', papel: 'aluno', matricula: '', cursoId: '',
     })
@@ -132,11 +153,23 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
             alert('Preencha nome, e-mail e senha.')
             return
         }
+
+        const emailTrimmed = email.trim().toLowerCase()
+        if (papel === 'professor' && !emailTrimmed.endsWith('@uepa.br')) {
+            alert('E-mail de professor deve terminar com @uepa.br')
+            return
+        }
+        if (papel === 'aluno' && !emailTrimmed.endsWith('@aluno.uepa.br')) {
+            alert('E-mail de aluno deve terminar com @aluno.uepa.br')
+            return
+        }
+
         const pwChecks = checkPassword(senha)
         if (!Object.values(pwChecks).every(Boolean)) {
             alert('A senha não atende todos os requisitos de segurança.')
             return
         }
+
         if (papel === 'aluno' && !cursoId) {
             alert('Selecione o curso do aluno.')
             return
@@ -171,6 +204,63 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
     const ativos = usuarios.filter(u => u.status === 'aprovado');
     const recusados = usuarios.filter(u => u.status === 'recusado');
 
+    const abrirModalEdicao = (u) => {
+        setUsuarioSelecionado(u)
+        setFormEdicao({
+            nome: u.nome || '',
+            email: u.email || '',
+            username: u.username || '',
+            telefone: u.telefone || '',
+            papel: u.papel || 'aluno',
+            matricula: u.matricula || '',
+            siape: u.siape || '',
+            departamento: u.departamento || '',
+            status: u.status || 'pendente',
+            cursoId: u.cursoId ? String(u.cursoId) : '',
+            senha: '',
+        })
+    }
+
+    const fecharModalEdicao = () => {
+        setUsuarioSelecionado(null)
+        setSalvandoEdicao(false)
+    }
+
+    const salvarEdicao = async (e) => {
+        e.preventDefault()
+        if (!usuarioSelecionado?.id) return
+        if (!formEdicao.nome.trim() || !formEdicao.email.trim()) {
+            alert('Nome e e-mail são obrigatórios.')
+            return
+        }
+
+        setSalvandoEdicao(true)
+        try {
+            const payload = {
+                nome: formEdicao.nome.trim(),
+                email: formEdicao.email.trim(),
+                username: formEdicao.username.trim() || undefined,
+                telefone: formEdicao.telefone.trim() || undefined,
+                papel: formEdicao.papel,
+                matricula: formEdicao.matricula.trim() || undefined,
+                siape: formEdicao.siape.trim() || undefined,
+                departamento: formEdicao.departamento.trim() || undefined,
+                status: formEdicao.status,
+                cursoId: formEdicao.cursoId ? Number(formEdicao.cursoId) : undefined,
+                senha: formEdicao.senha.trim() || undefined,
+            }
+            await api.put(`/users/${usuarioSelecionado.id}`, payload)
+            if (onUsuarioCriado) onUsuarioCriado()
+            fecharModalEdicao()
+            alert('Dados do usuário atualizados com sucesso.')
+        } catch (err) {
+            const detail = err?.response?.data?.detail
+            alert(typeof detail === 'string' ? detail : 'Não foi possível atualizar o usuário.')
+        } finally {
+            setSalvandoEdicao(false)
+        }
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div>
@@ -178,18 +268,20 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                 <p className="text-sm text-gray-500">Controle de acesso e permissões do Campus.</p>
             </div>
 
-            <form onSubmit={handleCriarUsuario} className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 space-y-3">
-                <div className="flex items-center gap-2 text-indigo-900 font-bold text-sm">
+            <form onSubmit={handleCriarUsuario} className="rounded-2xl border border-blue-200 bg-blue-50/30 p-5 space-y-3">
+                <div className="flex items-center gap-2 text-blue-800 font-bold text-sm mb-1">
                     <UserPlus size={18} /> Novo usuário (admin)
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                     <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Nome completo"
                         value={formNovo.nome} onChange={e => setFormNovo(f => ({ ...f, nome: e.target.value }))} />
-                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="E-mail" type="email"
+                    <input className="px-3 py-2 rounded-xl border text-sm" type="email"
+                        placeholder={formNovo.papel === 'professor' ? 'E-mail (@uepa.br)' : 'E-mail (@aluno.uepa.br)'}
                         value={formNovo.email} onChange={e => setFormNovo(f => ({ ...f, email: e.target.value }))} />
-                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Username (opcional)"
+                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Nome de Usuário (opcional)"
                         value={formNovo.username} onChange={e => setFormNovo(f => ({ ...f, username: e.target.value }))} />
-                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Senha inicial" type="password"
+                    <input className="px-3 py-2 rounded-xl border text-sm" type="password"
+                        placeholder="Senha (mín. 12 car., A-z, 0-9, símbolo)"
                         value={formNovo.senha} onChange={e => setFormNovo(f => ({ ...f, senha: e.target.value }))} />
                     {formNovo.senha && (
                         <div className="sm:col-span-2">
@@ -201,8 +293,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                         <option value="aluno">Aluno</option>
                         <option value="professor">Professor</option>
                     </select>
-                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula / SIAPE (opcional)"
-                        value={formNovo.matricula} onChange={e => setFormNovo(f => ({ ...f, matricula: e.target.value }))} />
+                    <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula (opcional)" value={formNovo.matricula} onChange={e => setFormNovo(f => ({ ...f, matricula: e.target.value }))} />
                     {(formNovo.papel === 'aluno' || formNovo.papel === 'professor') && (
                         <div className="sm:col-span-2">
                             <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">Curso {formNovo.papel === 'aluno' ? '(obrigatório para aluno)' : '(opcional)'}</label>
@@ -217,7 +308,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                     )}
                 </div>
                 <button type="submit" disabled={criando}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-bold disabled:opacity-50">
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-700 text-white text-sm font-bold hover:bg-blue-800 transition-colors disabled:opacity-50">
                     {criando ? <Loader2 size={16} className="animate-spin" /> : null}
                     Cadastrar usuário
                 </button>
@@ -236,7 +327,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                                 <span className="w-2 h-2 rounded-full bg-amber-500" /> Aguardando Aprovação
                             </h4>
                             {pendentes.map(u => (
-                                <UsuarioCard key={u.id} u={u} onAprovar={onAprovar} onRecusar={onRecusar} onDeletar={onDeletar} showAprovar />
+                                <UsuarioCard key={u.id} u={u} onAprovar={onAprovar} onRecusar={onRecusar} onDeletar={onDeletar} onVisualizar={abrirModalEdicao} showAprovar />
                             ))}
                         </div>
                     )}
@@ -247,7 +338,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                                 <span className="w-2 h-2 rounded-full bg-green-500" /> Usuários Ativos
                             </h4>
                             {ativos.map(u => (
-                                <UsuarioCard key={u.id} u={u} onAprovar={onAprovar} onRecusar={onRecusar} onDeletar={onDeletar} showDesativar />
+                                <UsuarioCard key={u.id} u={u} onAprovar={onAprovar} onRecusar={onRecusar} onDeletar={onDeletar} onVisualizar={abrirModalEdicao} showDesativar />
                             ))}
                         </div>
                     )}
@@ -258,11 +349,78 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                                 <span className="w-2 h-2 rounded-full bg-gray-400" /> Inativos/Recusados
                             </h4>
                             {recusados.map(u => (
-                                <UsuarioCard key={u.id} u={u} onAprovar={onAprovar} onRecusar={onRecusar} onDeletar={onDeletar} showReativar />
+                                <UsuarioCard key={u.id} u={u} onAprovar={onAprovar} onRecusar={onRecusar} onDeletar={onDeletar} onVisualizar={abrirModalEdicao} showReativar />
                             ))}
                         </div>
                     )}
                 </>
+            )}
+
+            {usuarioSelecionado && (
+                <div className="fixed inset-0 z-[210] bg-slate-900/65 backdrop-blur-sm flex items-center justify-center p-4">
+                    <form onSubmit={salvarEdicao} className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-black text-slate-900">Visualizar/Editar Usuário</h4>
+                            <button type="button" onClick={fecharModalEdicao} className="text-gray-400 hover:text-gray-600">
+                                <XCircle size={20} />
+                            </button>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-3">
+                            <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Nome"
+                                value={formEdicao.nome} onChange={e => setFormEdicao(f => ({ ...f, nome: e.target.value }))} />
+                            <input className="px-3 py-2 rounded-xl border text-sm" placeholder="E-mail" type="email"
+                                value={formEdicao.email} onChange={e => setFormEdicao(f => ({ ...f, email: e.target.value }))} />
+                            <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Username"
+                                value={formEdicao.username} onChange={e => setFormEdicao(f => ({ ...f, username: e.target.value }))} />
+                            <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Telefone"
+                                value={formEdicao.telefone} onChange={e => setFormEdicao(f => ({ ...f, telefone: e.target.value }))} />
+                            <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula"
+                                value={formEdicao.matricula} onChange={e => setFormEdicao(f => ({ ...f, matricula: e.target.value }))} />
+                            <input className="px-3 py-2 rounded-xl border text-sm" placeholder="SIAPE"
+                                value={formEdicao.siape} onChange={e => setFormEdicao(f => ({ ...f, siape: e.target.value }))} />
+                            <input className="sm:col-span-2 px-3 py-2 rounded-xl border text-sm" placeholder="Departamento"
+                                value={formEdicao.departamento} onChange={e => setFormEdicao(f => ({ ...f, departamento: e.target.value }))} />
+                            <select className="px-3 py-2 rounded-xl border text-sm"
+                                value={formEdicao.papel} onChange={e => setFormEdicao(f => ({ ...f, papel: e.target.value }))}>
+                                <option value="aluno">Aluno</option>
+                                <option value="professor">Professor</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <select className="px-3 py-2 rounded-xl border text-sm"
+                                value={formEdicao.status} onChange={e => setFormEdicao(f => ({ ...f, status: e.target.value }))}>
+                                <option value="pendente">Pendente</option>
+                                <option value="aprovado">Aprovado</option>
+                                <option value="recusado">Recusado</option>
+                            </select>
+                            <select className="sm:col-span-2 px-3 py-2 rounded-xl border text-sm bg-white"
+                                value={formEdicao.cursoId} onChange={e => setFormEdicao(f => ({ ...f, cursoId: e.target.value }))}>
+                                <option value="">Sem curso vinculado</option>
+                                {cursos.map(c => (
+                                    <option key={c.id || c.idCurso} value={String(c.id || c.idCurso)}>{c.nomeCurso || c.nome}</option>
+                                ))}
+                            </select>
+                            <div className="sm:col-span-2">
+                                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">
+                                    Redefinir senha (opcional)
+                                </label>
+                                <input className="w-full px-3 py-2 rounded-xl border text-sm" type="password" placeholder="Nova senha"
+                                    value={formEdicao.senha} onChange={e => setFormEdicao(f => ({ ...f, senha: e.target.value }))} />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-2">
+                            <button type="button" onClick={fecharModalEdicao} className="px-4 py-2 rounded-xl border text-sm font-semibold">
+                                Cancelar
+                            </button>
+                            <button type="submit" disabled={salvandoEdicao}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-bold disabled:opacity-50">
+                                {salvandoEdicao ? <Loader2 size={16} className="animate-spin" /> : <Pencil size={14} />}
+                                Salvar alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
             )}
         </div>
     );

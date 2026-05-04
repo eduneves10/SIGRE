@@ -9,10 +9,10 @@ const Step3DisciplinaCurso = ({ form, set, errors, disciplinas, cursos, onGoTo }
     return (
         <div className="space-y-6">
             <div>
-                <label className={lbl}>Disciplina</label>
+                <label className={lbl}>Disciplina (Opcional)</label>
                 <div className="flex gap-2">
                     <select className={inp + hasErr('disciplinaId')} value={form.disciplinaId} onChange={e => set('disciplinaId', e.target.value)}>
-                        <option value="">Selecione a disciplina...</option>
+                        <option value="">Sem disciplina vinculada...</option>
                         {disciplinas.map(d => <option key={d.id} value={d.id}>{d.nomeDisciplina || d.nome}</option>)}
                     </select>
                     <CadastrarBtn label="Cadastrar disciplina" onClick={() => onGoTo('disciplinas')} />
@@ -20,10 +20,10 @@ const Step3DisciplinaCurso = ({ form, set, errors, disciplinas, cursos, onGoTo }
                 <ErrorHint error={errors.disciplinaId} />
             </div>
             <div>
-                <label className={lbl}>Curso</label>
+                <label className={lbl}>Curso (Opcional)</label>
                 <div className="flex gap-2">
                     <select className={inp + hasErr('cursoId')} value={form.cursoId} onChange={e => set('cursoId', e.target.value)}>
-                        <option value="">Selecione o curso...</option>
+                        <option value="">Sem curso vinculado...</option>
                         {cursos.map(c => <option key={c.id} value={c.id}>{c.nomeCurso || c.nome}{(c.siglaCurso || c.sigla) ? ` (${c.siglaCurso || c.sigla})` : ''}</option>)}
                     </select>
                     <CadastrarBtn label="Cadastrar curso" onClick={() => onGoTo('cursos')} />

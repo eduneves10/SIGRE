@@ -10,10 +10,10 @@ const Step4Professor = ({ form, set, errors, professores, onGoTo }) => {
     return (
         <div className="space-y-6">
             <div>
-                <label className={lbl}>Professor responsável</label>
+                <label className={lbl}>Professor responsável (Opcional)</label>
                 <div className="flex gap-2">
                     <select className={inp + hasErr('professorId')} value={form.professorId} onChange={e => set('professorId', e.target.value)}>
-                        <option value="">Selecione o professor...</option>
+                        <option value="">Sem professor vinculado...</option>
                         {professores.map(p => <option key={p.id} value={p.id}>{p.nomeProf || p.nome}</option>)}
                     </select>
                     <CadastrarBtn label="Cadastrar professor" onClick={() => onGoTo('professores')} />
