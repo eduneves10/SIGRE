@@ -244,7 +244,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                 </div>
             </div>
 
-            {/* ── Barra de Filtros (Copiada do Mapa de Ocupação) ── */}
+            {/* ── Barra de Filtros ── */}
             <div className="px-6 py-3 bg-white border-b border-gray-100 flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 text-gray-400 mr-1">
                     <Filter size={14} />

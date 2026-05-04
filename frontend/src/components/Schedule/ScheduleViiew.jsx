@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useSchedule } from './ScheduleContext'
 import MonthCalendar from '../Calendar/MonthCalendar'
 import ExportICSModal from '../Calendar/ExportICSModal'
-import OccupancyMap from './OccupancyMap'
-import { Calendar, Download, X, Map } from 'lucide-react'
+import { Calendar, Download, X } from 'lucide-react'
 
 const ScheduleViiew = ({ isAdmin = false, onAddForDate }) => {
     const { cursos, periodos, periodoAtivo } = useSchedule()
@@ -14,7 +13,6 @@ const ScheduleViiew = ({ isAdmin = false, onAddForDate }) => {
         return `${d}/${m}/${y}`;
     }
     const [showExport, setShowExport] = useState(false)
-    const [showMap, setShowMap] = useState(false)
 
     return (
         <div className='bg-white rounded-lg shadow-sm p-8'>
@@ -39,16 +37,6 @@ const ScheduleViiew = ({ isAdmin = false, onAddForDate }) => {
                 </div>
 
                 <div className='flex flex-col sm:flex-row items-end gap-3'>
-                    
-                    <button
-                        onClick={() => setShowMap(true)}
-                        className='flex items-center gap-2 px-4 py-2 rounded-lg border font-bold text-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md'
-                        style={{ borderColor: '#1c1aa3', color: 'white', background: '#1c1aa3' }}
-                    >
-                        <Map size={15} />
-                        Mapa de Ocupação
-                    </button>
-
                     {/* Botão exportar .ics */}
                    {isAdmin && (
                      <button
@@ -83,10 +71,6 @@ const ScheduleViiew = ({ isAdmin = false, onAddForDate }) => {
             {showExport && (
                 <ExportICSModal onClose={() => setShowExport(false)} />
             )}
-
-            {/* ── Modal Mapa de Ocupação ── */}
-            <OccupancyMap isOpen={showMap} onClose={() => setShowMap(false)} />
-
 
         </div>
     )
