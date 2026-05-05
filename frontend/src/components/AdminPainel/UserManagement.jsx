@@ -3,7 +3,7 @@ import { Users, GraduationCap, BookOpen, XCircle, UserPlus, Loader2, Check, X, P
 import api from '../../services/api';
 import { getCourses } from '../../services/CourseService';
 
-const TERMOS_PROIBIDOS = ['senha', 'password', '12345', 'qwerty', 'admin', 'teste', 'sigre', 'uepa', 'aluno', 'prof']
+const TERMOS_PROIBIDOS = ['senha', 'password', '12345', 'qwerty', 'admin', 'teste', 'sigra', 'uepa', 'aluno', 'prof']
 
 function checkPassword(senha) {
   const v = senha || ''

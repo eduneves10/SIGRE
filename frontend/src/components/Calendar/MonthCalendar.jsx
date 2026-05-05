@@ -119,7 +119,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
             if (filterSala && String(h.salaId) !== String(filterSala)) return false
             if (filterCurso && h.cursoId !== parseInt(filterCurso)) return false
             if (filterProfessor && h.professorId !== parseInt(filterProfessor)) return false
-            
+
             // Converte para data simples YYYY-MM-DD para comparação sem hora
             const y = date.getFullYear()
             const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -127,7 +127,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
             const dStr = `${y}-${m}-${d}`
             const iniStr = h.dataInicio
             const fimStr = h.dataFim
-            
+
             if (dStr < iniStr || dStr > fimStr) return false
 
             // Se for evento recorrente (tem diaSemana), precisa bater
@@ -160,7 +160,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
         const salasOcupadas = new Set(ocupacoes.map(h => h.salaId))
         const numOcupadas = salasOcupadas.size
         const totalSalas = filterSala ? 1 : Math.max(salas.length, numOcupadas, 1)
-        
+
         return {
             ocupadas: numOcupadas,
             total: totalSalas,
@@ -221,7 +221,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                     <p className="text-blue-200 text-xs mt-0.5">Disponibilidade mensal das salas</p>
                     {googleEventCount !== null && (
                         <p className="text-emerald-200 text-[10px] mt-1 font-semibold">
-                            Google Calendar: {googleEventCount} evento(s) SIGRE neste mês (conta conectada).
+                            Google Calendar: {googleEventCount} evento(s) SIGRA neste mês (conta conectada).
                         </p>
                     )}
                 </div>
@@ -252,8 +252,8 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                 </div>
 
                 {/* Filtro Sala */}
-                <select 
-                    value={filterSala} 
+                <select
+                    value={filterSala}
                     onChange={(e) => { setFilterSala(e.target.value); setSelectedDate(null) }}
                     className="text-[11px] bg-gray-50 border border-gray-200 text-gray-700 rounded-lg p-1.5 outline-none hover:border-blue-300 transition-colors min-w-[120px]"
                 >
@@ -264,8 +264,8 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                 </select>
 
                 {/* Filtro Turma/Curso */}
-                <select 
-                    value={filterCurso} 
+                <select
+                    value={filterCurso}
                     onChange={(e) => { setFilterCurso(e.target.value); setSelectedDate(null) }}
                     className="text-[11px] bg-gray-50 border border-gray-200 text-gray-700 rounded-lg p-1.5 outline-none hover:border-blue-300 transition-colors min-w-[120px]"
                 >
@@ -276,8 +276,8 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                 </select>
 
                 {/* Filtro Professor */}
-                <select 
-                    value={filterProfessor} 
+                <select
+                    value={filterProfessor}
                     onChange={(e) => { setFilterProfessor(e.target.value); setSelectedDate(null) }}
                     className="text-[11px] bg-gray-50 border border-gray-200 text-gray-700 rounded-lg p-1.5 outline-none hover:border-blue-300 transition-colors min-w-[120px]"
                 >
@@ -289,7 +289,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
 
                 {/* Limpar Filtros */}
                 {(filterSala || filterCurso || filterProfessor) && (
-                    <button 
+                    <button
                         onClick={() => {
                             setFilterSala('');
                             setFilterCurso('');
@@ -454,7 +454,7 @@ const MonthCalendar = ({ onAddForDate, isAdmin = false }) => {
                             </div>
                             <div className="bg-green-50 rounded-xl p-3 text-center border border-green-100">
                                 <p className="text-2xl font-black text-green-600">{selectedStats.total - selectedStats.ocupadas}</p>
-                                <p className="text-[10px] text-green-400 font-semibold uppercase tracking-wide">Disponível{selectedStats.total - selectedStats.ocupadas !== 1 ? 'is' : 'l'}</p>
+                                <p className="text-[10px] text-green-400 font-semibold uppercase tracking-wide">Disponíve{selectedStats.total - selectedStats.ocupadas !== 1 ? 'is' : 'l'}</p>
                             </div>
                         </div>
 

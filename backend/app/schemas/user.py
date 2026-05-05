@@ -14,7 +14,7 @@ def validar_senha_forte(v: Optional[str]) -> Optional[str]:
     
     termos_proibidos = (
         "senha", "password", "12345", "qwerty", "admin", "teste", 
-        "sigre", "uepa", "aluno", "prof"
+        "sigra", "uepa", "aluno", "prof"
     )
     
     v_lower = v.lower()

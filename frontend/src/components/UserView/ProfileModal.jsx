@@ -17,61 +17,61 @@ const cls = {
 }
 
 const PAPEL_CFG = {
-    aluno:     { label: 'Aluno',     Icon: GraduationCap, color: '#7c3aed', bg: '#ede9fe' },
-    professor: { label: 'Professor', Icon: BookOpen,      color: '#1d4ed8', bg: '#dbeafe' },
-    admin:     { label: 'Admin',     Icon: ShieldCheck,   color: '#065f46', bg: '#d1fae5' },
+    aluno: { label: 'Aluno', Icon: GraduationCap, color: '#7c3aed', bg: '#ede9fe' },
+    professor: { label: 'Professor', Icon: BookOpen, color: '#1d4ed8', bg: '#dbeafe' },
+    admin: { label: 'Admin', Icon: ShieldCheck, color: '#065f46', bg: '#d1fae5' },
 }
 
 const SENHA_FIELDS = [
-    { field: 'senhaAtual', label: 'Senha atual *',           key: 'atual' },
-    { field: 'novaSenha',  label: 'Nova senha *',             key: 'nova'  },
-    { field: 'confirmar',  label: 'Confirmar nova senha *',   key: 'conf'  },
+    { field: 'senhaAtual', label: 'Senha atual *', key: 'atual' },
+    { field: 'novaSenha', label: 'Nova senha *', key: 'nova' },
+    { field: 'confirmar', label: 'Confirmar nova senha *', key: 'conf' },
 ]
 
 // Componente principal 
 const ProfileModal = ({ userRole, onClose }) => {
     const [loading, setLoading] = useState(true)
-    const [saving,  setSaving]  = useState(false)
-    const [tab,     setTab]     = useState('info')
+    const [saving, setSaving] = useState(false)
+    const [tab, setTab] = useState('info')
     const [success, setSuccess] = useState('')
-    const [error,   setError]   = useState('')
+    const [error, setError] = useState('')
     const [showPwd, setShowPwd] = useState({ atual: false, nova: false, conf: false })
-    const [perfil,  setPerfil]  = useState(null)
+    const [perfil, setPerfil] = useState(null)
 
-    const [form,      setForm]      = useState({ nome: '', telefone: '' })
+    const [form, setForm] = useState({ nome: '', telefone: '' })
     const [senhaForm, setSenhaForm] = useState({ senhaAtual: '', novaSenha: '', confirmar: '' })
 
     // Carrega perfil via token
     useEffect(() => {
         let active = true
-        ;(async () => {
-            try {
-                const me = await fetchCurrentUser()
-                if (!active) return
-                applyUserProfile(me)
-                setPerfil(me)
-                setForm({ nome: me.nome || '', telefone: me.telefone || '' })
-            } catch {
-                if (active) setError('Não foi possível carregar seu perfil.')
-            } finally {
-                if (active) setLoading(false)
-            }
-        })()
+            ; (async () => {
+                try {
+                    const me = await fetchCurrentUser()
+                    if (!active) return
+                    applyUserProfile(me)
+                    setPerfil(me)
+                    setForm({ nome: me.nome || '', telefone: me.telefone || '' })
+                } catch {
+                    if (active) setError('Não foi possível carregar seu perfil.')
+                } finally {
+                    if (active) setLoading(false)
+                }
+            })()
         return () => { active = false }
     }, [])
 
     const clearFeedback = () => { setError(''); setSuccess('') }
-    const updateField   = (f, v) => { setForm(p => ({ ...p, [f]: v }));      clearFeedback() }
-    const updateSenha   = (f, v) => { setSenhaForm(p => ({ ...p, [f]: v })); clearFeedback() }
-    const switchTab     = (t)    => { setTab(t); clearFeedback() }
-    const togglePwd     = (k)    => setShowPwd(p => ({ ...p, [k]: !p[k] }))
+    const updateField = (f, v) => { setForm(p => ({ ...p, [f]: v })); clearFeedback() }
+    const updateSenha = (f, v) => { setSenhaForm(p => ({ ...p, [f]: v })); clearFeedback() }
+    const switchTab = (t) => { setTab(t); clearFeedback() }
+    const togglePwd = (k) => setShowPwd(p => ({ ...p, [k]: !p[k] }))
 
     // Salva nome / telefone 
     const handleSaveInfo = async (e) => {
         e.preventDefault()
         const nome = form.nome.trim()
-        if (!nome)      { setError('Nome não pode ficar em branco.'); return }
-        if (!perfil?.id){ setError('Sessão inválida. Faça login novamente.'); return }
+        if (!nome) { setError('Nome não pode ficar em branco.'); return }
+        if (!perfil?.id) { setError('Sessão inválida. Faça login novamente.'); return }
 
         setSaving(true)
         try {
@@ -102,7 +102,7 @@ const ProfileModal = ({ userRole, onClose }) => {
         const { senhaAtual, novaSenha, confirmar } = senhaForm
 
         if (!senhaAtual) { setError('Informe a senha atual.'); return }
-        
+
         // 1. Validação de Complexidade
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/
         if (!passwordRegex.test(novaSenha)) {
@@ -111,14 +111,14 @@ const ProfileModal = ({ userRole, onClose }) => {
         }
 
         // 2. Validação de Termos Proibidos
-        const proibidos = ["senha", "password", "12345", "qwerty", "admin", "teste", "sigre", "uepa", "aluno", "prof"]
+        const proibidos = ["senha", "password", "12345", "qwerty", "admin", "teste", "sigra", "uepa", "aluno", "prof"]
         if (proibidos.some(termo => novaSenha.toLowerCase().includes(termo))) {
             setError('A nova senha contém termos fáceis de adivinhar.')
             return
         }
 
         if (novaSenha !== confirmar) { setError('As senhas não coincidem.'); return }
-        if (!perfil?.id)             { setError('Sessão inválida. Faça login novamente.'); return }
+        if (!perfil?.id) { setError('Sessão inválida. Faça login novamente.'); return }
 
         setSaving(true)
         try {
@@ -140,8 +140,8 @@ const ProfileModal = ({ userRole, onClose }) => {
     }
 
     // Derivados
-    const papel     = perfil?.papel || userRole || 'aluno'
-    const cfg       = PAPEL_CFG[papel] ?? PAPEL_CFG.aluno
+    const papel = perfil?.papel || userRole || 'aluno'
+    const cfg = PAPEL_CFG[papel] ?? PAPEL_CFG.aluno
     const PapelIcon = cfg.Icon
     const idDoc = {
         label: papel === 'professor' ? 'SIAPE' : 'Matrícula',
@@ -204,7 +204,7 @@ const ProfileModal = ({ userRole, onClose }) => {
                 {/* Tabs */}
                 <div className="flex shrink-0 border-b border-gray-100 px-8">
                     {[
-                        { key: 'info',  label: 'Informações',   Icon: User },
+                        { key: 'info', label: 'Informações', Icon: User },
                         { key: 'senha', label: 'Alterar Senha', Icon: Lock },
                     ].map(({ key, label, Icon }) => (
                         <button

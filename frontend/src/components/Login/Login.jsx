@@ -13,22 +13,22 @@ import { getCourses } from '../../services/CourseService'
 // Admin usa credenciais sincronizadas com o backend
 
 const roleConfig = {
-    admin:     { label: 'Administrador', icon: Shield,        color: '#1c1aa3' },
-    aluno:     { label: 'Aluno',          icon: GraduationCap, color: '#7c3aed' },
-    professor: { label: 'Professor',      icon: BookOpen,      color: '#1d4ed8' },
+    admin: { label: 'Administrador', icon: Shield, color: '#1c1aa3' },
+    aluno: { label: 'Aluno', icon: GraduationCap, color: '#7c3aed' },
+    professor: { label: 'Professor', icon: BookOpen, color: '#1d4ed8' },
 }
 
 // ── Componente ────────────────────────────────────────────────────────────────
 const Login = ({ onLoginSuccess }) => {
-    const [formData, setFormData]     = useState({ username: '', password: '' })
+    const [formData, setFormData] = useState({ username: '', password: '' })
     const [showPassword, setShowPassword] = useState(false)
-    const [error, setError]           = useState('')
-    const [loading, setLoading]       = useState(false)
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
     const [activeRole, setActiveRole] = useState('admin')
-    const [mode, setMode]             = useState('login') // 'login' | 'register'
-    const [success, setSuccess]       = useState('')
+    const [mode, setMode] = useState('login') // 'login' | 'register'
+    const [success, setSuccess] = useState('')
     const [showRegisterPassword, setShowRegisterPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword]   = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     const [cursosDisponiveis, setCursosDisponiveis] = useState([])
 
@@ -85,16 +85,16 @@ const Login = ({ onLoginSuccess }) => {
             }
             onLoginSuccess(userData.papel)
 
-        } 
+        }
         catch (err) {
             if (err.response?.status === 403) {
                 setError('Sua conta ainda aguarda aprovação do administrador.')
                 return
             }
-            
+
             const detail = err.response?.data?.detail || err.response?.data?.message
             if (Array.isArray(detail)) {
-                setError(detail[0].msg.replace('Value error, ', '')) 
+                setError(detail[0].msg.replace('Value error, ', ''))
             } else if (typeof detail === 'string') {
                 setError(detail)
             } else {
@@ -108,10 +108,10 @@ const Login = ({ onLoginSuccess }) => {
     // ── Cadastro ───────────────────────────────────────────────────────────────
     const formatTelefone = (value) => {
         const digits = value.replace(/\D/g, '').slice(0, 11)
-        if (digits.length <= 2)  return `(${digits}`
-        if (digits.length <= 6)  return `(${digits.slice(0,2)}) ${digits.slice(2)}`
-        if (digits.length <= 10) return `(${digits.slice(0,2)}) ${digits.slice(2,6)}-${digits.slice(6)}`
-        return `(${digits.slice(0,2)}) ${digits.slice(2,3)} ${digits.slice(3,7)}-${digits.slice(7)}`
+        if (digits.length <= 2) return `(${digits}`
+        if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+        if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
+        return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`
     }
 
     const handleRegisterChange = (e) => {
@@ -124,32 +124,32 @@ const Login = ({ onLoginSuccess }) => {
     const validateRegister = () => {
         const { nome, email, username, password, confirmPassword, matricula, cursoId, departamento } = registerData
 
-        if (!nome.trim())     return 'Informe seu nome completo'
+        if (!nome.trim()) return 'Informe seu nome completo'
         if (!username.trim()) return 'Informe seu nome de usuário'
-        if (!email.trim())    return 'Informe seu e-mail'
+        if (!email.trim()) return 'Informe seu e-mail'
 
         if (activeRole === 'aluno') {
             if (!email.toLowerCase().endsWith('@aluno.uepa.br'))
                 return 'O e-mail deve ser do domínio @aluno.uepa.br'
             if (!matricula.trim()) return 'Informe sua matrícula'
-            if (!cursoId)          return 'Selecione seu curso'
+            if (!cursoId) return 'Selecione seu curso'
         }
 
         if (activeRole === 'professor') {
-            if (!cursoId)              return 'Selecione o curso'
-            if (!departamento.trim())  return 'Informe seu departamento'
+            if (!cursoId) return 'Selecione o curso'
+            if (!departamento.trim()) return 'Informe seu departamento'
         }
 
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/
         if (!passwordRegex.test(password)) {
             return 'A senha deve ter mín. 12 caracteres, com maiúsculas, minúsculas, números e símbolos.'
         }
-        
-        const proibidos = ["senha", "password", "12345", "qwerty", "admin", "teste", "sigre", "uepa", "aluno", "prof"]
+
+        const proibidos = ["senha", "password", "12345", "qwerty", "admin", "teste", "sigra", "uepa", "aluno", "prof"]
         if (proibidos.some(termo => password.toLowerCase().includes(termo))) {
             return 'A senha contém termos fáceis de adivinhar.'
         }
-        
+
         if (password !== confirmPassword) return 'As senhas não são iguais'
 
         return null
@@ -166,14 +166,14 @@ const Login = ({ onLoginSuccess }) => {
             // Monta payload conforme o que o backend espera
             // cursoId deve ser número inteiro — o backend salva em fk_curso
             const payload = {
-                nome:         registerData.nome,
-                email:        registerData.email,
-                telefone:     registerData.telefone,
-                username:     registerData.username,
-                senha:        registerData.password,
-                papel:        activeRole,
-                cursoId:      registerData.cursoId ? Number(registerData.cursoId) : undefined,
-                matricula:    registerData.matricula    || undefined,
+                nome: registerData.nome,
+                email: registerData.email,
+                telefone: registerData.telefone,
+                username: registerData.username,
+                senha: registerData.password,
+                papel: activeRole,
+                cursoId: registerData.cursoId ? Number(registerData.cursoId) : undefined,
+                matricula: registerData.matricula || undefined,
                 departamento: registerData.departamento || undefined,
             }
 
@@ -186,7 +186,7 @@ const Login = ({ onLoginSuccess }) => {
         } catch (err) {
             const detail = err.response?.data?.detail || err.response?.data?.message
             if (Array.isArray(detail)) {
-                setError(detail[0].msg.replace('Value error, ', '')) 
+                setError(detail[0].msg.replace('Value error, ', ''))
             } else if (typeof detail === 'string') {
                 setError(detail)
             } else {
@@ -243,7 +243,7 @@ const Login = ({ onLoginSuccess }) => {
                     <div className="flex items-center gap-3 mb-6">
                         <img src={logo} alt="Logo UEPA" className="h-10 object-contain" />
                         <div>
-                            <p className="text-xs font-bold tracking-widest uppercase" style={{ color: '#1c1aa3' }}>SIGRE</p>
+                            <p className="text-xs font-bold tracking-widest uppercase" style={{ color: '#1c1aa3' }}>SIGRA</p>
                             <p className="text-[10px] text-gray-400">Sistema Integrado de Gestão de Reservas Acadêmicas</p>
                         </div>
                     </div>
@@ -267,11 +267,11 @@ const Login = ({ onLoginSuccess }) => {
                                 <button key={key} type="button" onClick={() => switchRole(key)}
                                     className="cursor-pointer flex-1 flex flex-col items-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center"
                                     style={{
-                                        borderColor:     isActive ? c.color : '#e5e7eb',
+                                        borderColor: isActive ? c.color : '#e5e7eb',
                                         backgroundColor: isActive ? c.color + '12' : 'transparent',
-                                        color:           isActive ? c.color : '#6b7280',
-                                        transform:       isActive ? 'translateY(-2px)' : 'none',
-                                        boxShadow:       isActive ? `0 4px 16px ${c.color}30` : 'none',
+                                        color: isActive ? c.color : '#6b7280',
+                                        transform: isActive ? 'translateY(-2px)' : 'none',
+                                        boxShadow: isActive ? `0 4px 16px ${c.color}30` : 'none',
                                     }}>
                                     <Icon size={18} />
                                     <span className="text-[11px] font-bold">{c.label}</span>
@@ -309,22 +309,22 @@ const Login = ({ onLoginSuccess }) => {
                             <div className="relative">
                                 <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input type="text" name="username" value={formData.username}
-                                    onChange={e => { setFormData({...formData, username: e.target.value}); setError('') }}
+                                    onChange={e => { setFormData({ ...formData, username: e.target.value }); setError('') }}
                                     placeholder="Usuário" required autoComplete="username"
                                     className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                     onFocus={e => e.target.style.borderColor = accentColor}
-                                    onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                    onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
                             </div>
 
                             <div className="relative">
                                 <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input type={showPassword ? 'text' : 'password'} name="password"
                                     value={formData.password}
-                                    onChange={e => { setFormData({...formData, password: e.target.value}); setError('') }}
+                                    onChange={e => { setFormData({ ...formData, password: e.target.value }); setError('') }}
                                     placeholder="Senha" required autoComplete="current-password"
                                     className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                     onFocus={e => e.target.style.borderColor = accentColor}
-                                    onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                    onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
                                 <button type="button" onClick={() => setShowPassword(p => !p)}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -337,8 +337,8 @@ const Login = ({ onLoginSuccess }) => {
                                 {loading ? (
                                     <span className="flex items-center justify-center gap-2">
                                         <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                         </svg>
                                         Entrando...
                                     </span>
@@ -374,7 +374,7 @@ const Login = ({ onLoginSuccess }) => {
                                     onChange={handleRegisterChange} placeholder="Nome completo" required
                                     className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                     onFocus={e => e.target.style.borderColor = accentColor}
-                                    onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                    onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
                             </div>
 
                             {/* Email */}
@@ -386,7 +386,7 @@ const Login = ({ onLoginSuccess }) => {
                                     required
                                     className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                     onFocus={e => e.target.style.borderColor = accentColor}
-                                    onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                    onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
                             </div>
 
                             {/* Aviso de domínio */}
@@ -403,7 +403,7 @@ const Login = ({ onLoginSuccess }) => {
                                     onChange={handleRegisterChange} placeholder="(91) 9 XXXX-XXXX" required
                                     className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                     onFocus={e => e.target.style.borderColor = accentColor}
-                                    onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                    onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
                             </div>
 
                             {/* Campos específicos — Aluno */}
@@ -413,7 +413,7 @@ const Login = ({ onLoginSuccess }) => {
                                         onChange={handleRegisterChange} placeholder="Matrícula" required
                                         className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                         onFocus={e => e.target.style.borderColor = accentColor}
-                                        onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                        onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
 
                                     {/* cursoId — value é o ID numérico do curso */}
                                     <div className="relative">
@@ -441,7 +441,7 @@ const Login = ({ onLoginSuccess }) => {
                                             onChange={handleRegisterChange} required
                                             className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all appearance-none"
                                             onFocus={e => e.target.style.borderColor = accentColor}
-                                            onBlur={e  => e.target.style.borderColor = '#e5e7eb'}>
+                                            onBlur={e => e.target.style.borderColor = '#e5e7eb'}>
                                             <option value="">Selecione o Curso</option>
                                             {cursosDisponiveis.map(c => (
                                                 <option key={c.id || c.idCurso} value={c.id || c.idCurso}>
@@ -456,7 +456,7 @@ const Login = ({ onLoginSuccess }) => {
                                         onChange={handleRegisterChange} placeholder="Departamento" required
                                         className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                         onFocus={e => e.target.style.borderColor = accentColor}
-                                        onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                        onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
                                 </div>
                             )}
 
@@ -467,7 +467,7 @@ const Login = ({ onLoginSuccess }) => {
                                     onChange={handleRegisterChange} placeholder="Nome de usuário" required
                                     className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                     onFocus={e => e.target.style.borderColor = accentColor}
-                                    onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                    onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
                             </div>
 
                             {/* Senha */}
@@ -478,7 +478,7 @@ const Login = ({ onLoginSuccess }) => {
                                     placeholder="Senha (mín. 12 caracteres)" required
                                     className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                     onFocus={e => e.target.style.borderColor = accentColor}
-                                    onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                    onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
                                 <button type="button" onClick={() => setShowRegisterPassword(p => !p)}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                                     {showRegisterPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -493,7 +493,7 @@ const Login = ({ onLoginSuccess }) => {
                                     placeholder="Confirmar senha" required
                                     className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                     onFocus={e => e.target.style.borderColor = accentColor}
-                                    onBlur={e  => e.target.style.borderColor = '#e5e7eb'} />
+                                    onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
                                 <button type="button" onClick={() => setShowConfirmPassword(p => !p)}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}

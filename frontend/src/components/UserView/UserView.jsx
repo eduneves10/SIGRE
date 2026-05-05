@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSchedule } from '../Schedule/ScheduleContext'
 import ScheduleViiew from '../Schedule/ScheduleViiew'
 import RoomRequestForm from './RoomRequestForm'
- import ProfileModal from './ProfileModal' 
+import ProfileModal from './ProfileModal'
 import axios from 'axios'
 import { Building2, ClipboardList, Plus, GraduationCap, BookOpen, LogOut, Bell, Calendar, Clock, UserCircle } from 'lucide-react'
 import logo from '../../assets/logouepa.png'
@@ -10,8 +10,8 @@ import logo from '../../assets/logouepa.png'
 import api from '../../services/api'
 
 const roleConfig = {
-    aluno:     { label: 'Aluno',     Icon: GraduationCap, color: '#7c3aed' },
-    professor: { label: 'Professor', Icon: BookOpen,      color: '#1d4ed8' },
+    aluno: { label: 'Aluno', Icon: GraduationCap, color: '#7c3aed' },
+    professor: { label: 'Professor', Icon: BookOpen, color: '#1d4ed8' },
 }
 
 const STATUS_STYLES = {
@@ -23,7 +23,7 @@ const STATUS_STYLES = {
 const UserView = ({ userRole, onLogOut }) => {
     const [showProfile, setShowProfile] = useState(false)
     const { salas } = useSchedule()
-    const [showForm, setShowForm]   = useState(false)
+    const [showForm, setShowForm] = useState(false)
     const [activeTab, setActiveTab] = useState('calendario')
     const [solicitacoes, setSolicitacoes] = useState([])
     const [loading, setLoading] = useState(false)
@@ -54,15 +54,15 @@ const UserView = ({ userRole, onLogOut }) => {
     }, [userEmail])
 
     const formatSolicitacao = (s) => ({
-        id:       s.idSolicitacao,
-        motivo:   s.motivo,
+        id: s.idSolicitacao,
+        motivo: s.motivo,
         descricao: s.descricao,
         observacoes: s.observacoes,
-        sala:     s.sala?.nome || s.sala?.nomeSala || s.sala?.codigo_sala || '',
+        sala: s.sala?.nome || s.sala?.nomeSala || s.sala?.codigo_sala || '',
         diaSemana: s.diaSemana,
-        data:     s.dataEvento || '',
+        data: s.dataEvento || '',
         horario: `${s.horarioInicio?.slice(0, 5)} – ${s.horarioFim?.slice(0, 5)}`,
-        status:   s.status,
+        status: s.status,
         criadoEm: s.criadoEm,
         motivoRecusa: s.motivoRecusa,
     })
@@ -82,7 +82,7 @@ const UserView = ({ userRole, onLogOut }) => {
                             <img src={logo} alt="Logo UEPA" className="h-10 object-contain" />
                             <div className="hidden sm:block w-px h-8 bg-white/20" />
                             <div className="hidden sm:block">
-                                <p className="text-xs font-bold text-blue-200 tracking-widest uppercase">SIGRE</p>
+                                <p className="text-xs font-bold text-blue-200 tracking-widest uppercase">SIGRA</p>
                                 <p className="text-[10px] text-blue-300/60">Sistema Integrado de Gestão de Reservas Acadêmicas</p>
                             </div>
                         </div>
@@ -131,7 +131,7 @@ const UserView = ({ userRole, onLogOut }) => {
                     <div className="flex items-center justify-between">
                         <div className="flex">
                             {[
-                                { key: 'calendario',   label: 'Calendário de Ocupação',  Icon: Building2 },
+                                { key: 'calendario', label: 'Calendário de Ocupação', Icon: Building2 },
                                 { key: 'solicitacoes', label: 'Minhas Solicitações', Icon: ClipboardList },
                             ].map(({ key, label, Icon }) => (
                                 <button key={key} onClick={() => setActiveTab(key)}
@@ -246,7 +246,7 @@ const UserView = ({ userRole, onLogOut }) => {
                     onClose={() => setShowProfile(false)}
                 />
             )}
-            
+
         </div>
     )
 }

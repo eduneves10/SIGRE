@@ -34,7 +34,7 @@ def build_event_description(justificativa: Optional[str]) -> str:
 
 def build_event_private_metadata(reservation: Alocacao, status_override: Optional[str] = None) -> dict[str, str]:
     """
-    Centraliza metadados usados para reconciliação entre SIGRE e Google.
+    Centraliza metadados usados para reconciliação entre SIGRA e Google.
     """
     metadata = {
         "fk_sala": str(reservation.fk_sala),

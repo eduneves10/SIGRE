@@ -1,4 +1,4 @@
-# SIGRE - Sistema Integrado de Gestão de Reservas Acadêmicas
+# SIGRA - Sistema Integrado de Gestão de Reservas Acadêmicas
 
 Este repositório contém a stack completa do sistema de gestão de salas e reservas da UEPA, integrando um backend em FastAPI com um frontend em React.
 
