@@ -81,7 +81,6 @@ const ScheduleForm = ({ horarioEdit, onSave, onCancel, onGoToCadastros, restoreD
                         set={set} 
                         errors={errors} 
                         professores={professores} 
-                        onGoTo={handleGoTo} 
                     />
                 )}
 
