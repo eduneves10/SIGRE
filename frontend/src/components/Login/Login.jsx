@@ -174,6 +174,7 @@ const Login = ({ onLoginSuccess }) => {
                 papel: activeRole,
                 cursoId: registerData.cursoId ? Number(registerData.cursoId) : undefined,
                 matricula: registerData.matricula || undefined,
+                siape: registerData.siape || undefined,
                 departamento: registerData.departamento || undefined,
             }
 
@@ -436,7 +437,7 @@ const Login = ({ onLoginSuccess }) => {
                             {activeRole === 'professor' && (
                                 <div className="grid grid-cols-2 gap-3">
                                     {/* cursoId — value é o ID numérico do curso */}
-                                    <div className="relative">
+                                    <div className="relative col-span-2">
                                         <select name="cursoId" value={registerData.cursoId}
                                             onChange={handleRegisterChange} required
                                             className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all appearance-none"
@@ -454,6 +455,18 @@ const Login = ({ onLoginSuccess }) => {
 
                                     <input type="text" name="departamento" value={registerData.departamento}
                                         onChange={handleRegisterChange} placeholder="Departamento" required
+                                        className="col-span-2 px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
+                                        onFocus={e => e.target.style.borderColor = accentColor}
+                                        onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
+
+                                    <input type="text" name="matricula" value={registerData.matricula}
+                                        onChange={handleRegisterChange} placeholder="Matrícula (opcional)"
+                                        className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
+                                        onFocus={e => e.target.style.borderColor = accentColor}
+                                        onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
+
+                                    <input type="text" name="siape" value={registerData.siape}
+                                        onChange={handleRegisterChange} placeholder="SIAPE (opcional)"
                                         className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                         onFocus={e => e.target.style.borderColor = accentColor}
                                         onBlur={e => e.target.style.borderColor = '#e5e7eb'} />

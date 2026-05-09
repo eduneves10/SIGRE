@@ -38,6 +38,7 @@ class ProfessorService:
             nome=data.nomeProf,
             email=data.emailProf.strip(),
             matricula=mat,
+            siape=(data.siapeProf or "").strip() or None,
             tipo_usuario=2, # Professor
             status="aprovado",
             senha=hash_password("mudarsenha123"), # Default password
@@ -60,6 +61,8 @@ class ProfessorService:
         if data.matriculaProf is not None:
             m = (data.matriculaProf or "").strip() or None
             db_obj.matricula = m
+        if data.siapeProf is not None:
+            db_obj.siape = (data.siapeProf or "").strip() or None
             
         db.commit()
         db.refresh(db_obj)

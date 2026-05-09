@@ -140,7 +140,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
     senha: '',
   })
   const [formNovo, setFormNovo] = useState({
-    nome: '', email: '', username: '', senha: '', papel: 'aluno', matricula: '', cursoId: '',
+    nome: '', email: '', username: '', senha: '', papel: 'aluno', matricula: '', siape: '', cursoId: '',
   })
 
   useEffect(() => {
@@ -185,12 +185,13 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
         senha,
         papel,
         matricula: matricula.trim() || undefined,
+        siape: (formNovo.siape.trim() && papel === 'professor') ? formNovo.siape.trim() : undefined,
       }
       if (cursoId) {
         payload.cursoId = Number(cursoId)
       }
       await api.post('/users/', payload)
-      setFormNovo({ nome: '', email: '', username: '', senha: '', papel: 'aluno', matricula: '', cursoId: '' })
+      setFormNovo({ nome: '', email: '', username: '', senha: '', papel: 'aluno', matricula: '', siape: '', cursoId: '' })
       if (onUsuarioCriado) onUsuarioCriado()
       alert('Usuário criado. Ele aparecerá na lista conforme o status definido pelo servidor.')
     } catch (err) {
@@ -303,6 +304,10 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
             <option value="professor">Professor</option>
           </select>
           <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula (opcional)" value={formNovo.matricula} onChange={e => setFormNovo(f => ({ ...f, matricula: e.target.value }))} />
+          {formNovo.papel === 'professor' && (
+            <input className="px-3 py-2 rounded-xl border text-sm" placeholder="SIAPE (opcional)"
+              value={formNovo.siape} onChange={e => setFormNovo(f => ({ ...f, siape: e.target.value }))} />
+          )}
           {(formNovo.papel === 'aluno' || formNovo.papel === 'professor') && (
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">Curso {formNovo.papel === 'aluno' ? '(obrigatório para aluno)' : '(opcional)'}</label>
