@@ -4,7 +4,7 @@ import { useSchedule } from '../Schedule/ScheduleContext'
 import { getDashboardMetrics } from '../../services/DashboardService'
 import { startGoogleCalendarConnect } from '../../services/GoogleServices'
 import {
-    Plus, LayoutGrid, ClipboardList, Calendar, Database,
+    Plus, LayoutGrid, ClipboardList, Calendar, Database, Map,
     CheckCircle2, XCircle, Clock, Building2, User, Users,
     AlignLeft, ChevronDown, ChevronUp, GraduationCap, BookOpen,
     Bell, Filter, Search, FileSpreadsheet, AlertTriangle, Settings, Link, ArrowRight
@@ -18,6 +18,7 @@ import MonthCalendar from '../Calendar/MonthCalendar'
 import ImportarPlanilha from './ImportarPlanilha'
 
 import UserManagement from './UserManagement'
+import EventoModal from './EventoModal'
 
 const STATUS_STYLES = {
     pendente: { label: 'Pendente', bg: '#fef9c3', color: '#ca8a04', dot: '#eab308', border: '#fde68a' },
@@ -36,6 +37,7 @@ const AdminPainel = () => {
     const { adicionarHorario, atualizarHorario } = useSchedule()
     const [showImport, setShowImport] = useState(false)
     const [showForm, setShowForm] = useState(false)
+    const [showEventoModal, setShowEventoModal] = useState(false)
     const [horarioEdit, setHorarioEdit] = useState(null)
     const [restoreDraft, setRestoreDraft] = useState(false)
     const [activeTab, setActiveTab] = useState(() => {
@@ -45,6 +47,9 @@ const AdminPainel = () => {
 
     const [isGoogleConnected, setIsGoogleConnected] = useState(false)
     const [loadingGoogle, setLoadingGoogle] = useState(false)
+    const [loadingAprovar, setLoadingAprovar] = useState(null)
+    const [loadingRecusar, setLoadingRecusar] = useState(null)
+    const [loadingDisconnect, setLoadingDisconnect] = useState(false)
 
     const checkGoogleStatus = async () => {
         try {
@@ -193,10 +198,13 @@ const AdminPainel = () => {
     }
 
     const handleCheckAprovar = async (solicitacao) => {
+        if (loadingAprovar) return
         await handleFinalizarAprovacao(solicitacao.id);
     }
 
     const handleFinalizarAprovacao = async (id, substituir = false) => {
+        if (loadingAprovar) return
+        setLoadingAprovar(id)
         try {
             await api.patch(`/solicitations/${id}/status`, {
                 status: 'aprovado'
@@ -205,9 +213,12 @@ const AdminPainel = () => {
             setConflito(null);
             setExpandedId(null);
         } catch (err) { alert('Erro ao finalizar aprovação.'); }
+        finally { setLoadingAprovar(null) }
     }
 
     const handleRecusarSolicitacao = async (id) => {
+        if (loadingRecusar === id) return
+        setLoadingRecusar(id)
         try {
             await api.patch(`/solicitations/${id}/status`, {
                 status: 'recusado',
@@ -216,6 +227,7 @@ const AdminPainel = () => {
             carregarSolicitacoes()
             setExpandedId(null)
         } catch (err) { alert('Erro ao recusar solicitação.') }
+        finally { setLoadingRecusar(null) }
     }
 
     const solicitacoesFiltradas = solicitacoes.filter(s => {
@@ -258,8 +270,9 @@ const AdminPainel = () => {
                             </p>
                             <div className="flex flex-col gap-2 pt-2">
                                 <button onClick={() => handleFinalizarAprovacao(conflito.nova.id, true)}
-                                    className="w-full py-3 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 shadow-lg shadow-red-200">
-                                    SUBSTITUIR E APROVAR
+                                    disabled={loadingAprovar === conflito.nova.id}
+                                    className="w-full py-3 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 disabled:opacity-50 shadow-lg shadow-red-200">
+                                    {loadingAprovar === conflito.nova.id ? 'Aprovando...' : 'SUBSTITUIR E APROVAR'}
                                 </button>
                                 <button onClick={() => setConflito(null)}
                                     className="w-full py-3 bg-white text-slate-500 rounded-xl font-bold text-sm border border-slate-200">
@@ -285,7 +298,8 @@ const AdminPainel = () => {
                             </p>
                             <div className="flex flex-col gap-3 mt-8">
                                 <button onClick={confirmDisconnect}
-                                    className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-700 shadow-xl shadow-red-200 transition-all">
+                                    disabled={loadingGoogle}
+                                    className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-700 disabled:opacity-50 shadow-xl shadow-red-200 transition-all">
                                     Sim, Desvincular
                                 </button>
                                 <button onClick={() => setModalConfirmDisconnect(false)}
@@ -443,12 +457,14 @@ const AdminPainel = () => {
                                                         <>
                                                             <button
                                                                 onClick={e => { e.stopPropagation(); handleRecusarSolicitacao(s.id) }}
-                                                                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-200 text-red-500 hover:bg-red-50 transition-colors whitespace-nowrap"
-                                                            >Recusar</button>
+                                                                disabled={loadingRecusar === s.id || loadingAprovar === s.id}
+                                                                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-50 transition-colors whitespace-nowrap"
+                                                            >{loadingRecusar === s.id ? '...' : 'Recusar'}</button>
                                                             <button
                                                                 onClick={e => { e.stopPropagation(); handleCheckAprovar(s) }}
-                                                                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 transition-colors whitespace-nowrap shadow-sm"
-                                                            >Aprovar</button>
+                                                                disabled={loadingAprovar === s.id || loadingRecusar === s.id}
+                                                                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors whitespace-nowrap shadow-sm"
+                                                            >{loadingAprovar === s.id ? '...' : 'Aprovar'}</button>
                                                         </>
                                                     )}
                                                     <span className="text-gray-300">
@@ -505,8 +521,8 @@ const AdminPainel = () => {
                                                     <div className="flex gap-2">
                                                         <input value={motivoRecusa[s.id] || ''} onChange={e => setMotivoRecusa({ ...motivoRecusa, [s.id]: e.target.value })}
                                                             placeholder="Motivo da recusa (opcional)" className="flex-1 px-4 text-sm rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-100" />
-                                                        <button onClick={() => handleRecusarSolicitacao(s.id)} className="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-sm border border-red-100">Recusar</button>
-                                                        <button onClick={() => handleCheckAprovar(s)} className="px-5 py-2.5 bg-green-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-green-100">Aprovar</button>
+                                                        <button onClick={() => handleRecusarSolicitacao(s.id)} disabled={loadingRecusar === s.id || loadingAprovar === s.id} className="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-sm border border-red-100 disabled:opacity-50">{loadingRecusar === s.id ? 'Recusando...' : 'Recusar'}</button>
+                                                        <button onClick={() => handleCheckAprovar(s)} disabled={loadingAprovar === s.id || loadingRecusar === s.id} className="px-5 py-2.5 bg-green-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-green-100 disabled:opacity-50">{loadingAprovar === s.id ? 'Aprovando...' : 'Aprovar'}</button>
                                                     </div>
                                                 )}
                                             </div>
@@ -538,7 +554,10 @@ const AdminPainel = () => {
                             <p className="font-bold text-indigo-900">Registrar aulas e horários de salas</p>
                             <ul className="list-disc pl-5 text-xs text-indigo-900/85 leading-relaxed space-y-1">
                                 <li>
-                                    <strong>Novo horário</strong> abre o assistente completo (sala, disciplina, professor e curso).
+                                    <strong>Nova aula</strong> abre o assistente completo (sala, disciplina, professor e curso).
+                                </li>
+                                <li>
+                                    <strong>Novo evento</strong> registra uma alocação pontual sem repetição (tipo, data, nome e sala).
                                 </li>
                                 <li>
                                     Pedidos de espaço feitos por alunos ou professores aparecem em <strong>Solicitações</strong> para aprovação ou recusa.
@@ -546,10 +565,22 @@ const AdminPainel = () => {
                             </ul>
                         </div>
                         <div className="flex flex-wrap gap-2 justify-end">
+                            {isGoogleConnected && (
+                                <a href="https://calendar.google.com/calendar/r/week" target="_blank" rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-95 transition-opacity"
+                                    style={{ background: 'linear-gradient(135deg,#0f766e,#0d9488)' }}>
+                                    <Map size={16} /> Mapa de ocupação
+                                </a>
+                            )}
+                            <button type="button" onClick={() => setShowEventoModal(true)}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-95 transition-opacity"
+                                style={{ background: 'linear-gradient(135deg,#6d28d9,#7c3aed)' }}>
+                                <Plus size={16} /> Novo evento
+                            </button>
                             <button type="button" onClick={() => { setHorarioEdit(null); setRestoreDraft(false); setShowForm(true) }}
                                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-95 transition-opacity"
                                 style={{ background: 'linear-gradient(135deg,#1c1aa3,#4f46e5)' }}>
-                                <Plus size={16} /> Novo horário
+                                <Plus size={16} /> Nova aula
                             </button>
                         </div>
 
@@ -749,6 +780,13 @@ const AdminPainel = () => {
                     </div>
                 )
             }
+
+            {showEventoModal && (
+                <EventoModal
+                    onClose={() => setShowEventoModal(false)}
+                    onSaved={() => {/* recarrega dados se necessário */}}
+                />
+            )}
         </div >
     )
 }
