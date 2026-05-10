@@ -436,6 +436,14 @@ class AllocationService(BaseService[Alocacao]):
 
         if alocacao.status == "APPROVED" and alocacao.google_event_id:
             self._sync_google_delete_if_exists(db, alocacao, current_user)
+
+        # Quando a alocação derivou de uma solicitação aprovada, rejeita a solicitação
+        # para que ela reflita o estado real na lista de solicitações.
+        linked_solicitation = db.query(Solicitacao).filter(Solicitacao.fk_alocacao == lid).first()
+        if linked_solicitation:
+            linked_solicitation.status = "recusado"
+            db.commit()
+
         self.repository.delete(db, lid)
 
     def update_reservation(
