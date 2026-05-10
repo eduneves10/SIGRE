@@ -13,7 +13,7 @@ from dateutil.rrule import rrulestr
 from app.models import Alocacao
 from app.models.room import Sala
 from app.models.user import Usuario
-from app.services.infra.datetime_utils import APP_TIMEZONE_NAME, from_storage_datetime
+from app.services.infra.datetime_utils import APP_TIMEZONE_NAME, from_storage_datetime, ensure_app_timezone
 
 PLATFORM_EVENT_SOURCE = "alocacoes"
 
@@ -182,23 +182,33 @@ def expand_local_reservation(
     """
     start_dt = from_storage_datetime(reservation.dia_horario_inicio)
     end_dt = from_storage_datetime(reservation.dia_horario_saida)
+    
+    range_start_app = ensure_app_timezone(range_start)
+    range_end_app = ensure_app_timezone(range_end)
 
     if not reservation.recurrency:
-        if end_dt < range_start or start_dt > range_end:
+        if end_dt < range_start_app or start_dt > range_end_app:
             return []
         return [build_local_event(reservation, start_dt, end_dt)]
 
+    start_dt_naive = start_dt.replace(tzinfo=None)
+    
     try:
-        recurrence = rrulestr(reservation.recurrency, dtstart=start_dt)
+        recurrence = rrulestr(reservation.recurrency, dtstart=start_dt_naive)
     except Exception as exc:
         print(f"Erro ao expandir recorrência local {reservation.id}: {exc}")
-        if end_dt < range_start or start_dt > range_end:
+        if end_dt < range_start_app or start_dt > range_end_app:
             return []
         return [build_local_event(reservation, start_dt, end_dt)]
 
     duration = end_dt - start_dt
     events = []
-    for occurrence_start in recurrence.between(range_start, range_end, inc=True):
+    
+    rs_naive = range_start_app.replace(tzinfo=None)
+    re_naive = range_end_app.replace(tzinfo=None)
+
+    for occ_naive in recurrence.between(rs_naive, re_naive, inc=True):
+        occurrence_start = ensure_app_timezone(occ_naive)
         occurrence_end = occurrence_start + duration
         instance_id = f"{reservation.id}:{occurrence_start.isoformat()}"
         events.append(build_local_event(reservation, occurrence_start, occurrence_end, instance_id))
