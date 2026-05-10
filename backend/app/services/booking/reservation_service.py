@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException, status
 
-from app.models import Alocacao, Sala, Usuario
+from app.models import Alocacao, Sala, Usuario, GoogleCredential
 from app.models.solicitation import Solicitacao
 from app.repositories.allocation_repository import allocation_repository
 from app.builders.reservation_builder import (
@@ -421,10 +421,16 @@ class AllocationService(BaseService[Alocacao]):
             return
 
         if not delete_series and len(parts) > 1 and alocacao.recurrency:
-            date_str = parts[1]  # e.g. '2026-05-15T08:00:00'
+            date_str = parts[1]  # e.g. '2026-05-15T08:00:00' or '2026-05-15T08:00:00-03:00'
             
-            # Format local EXDATE (dateutil parses it without Z if it's local)
-            dt_formatted_local = date_str.replace("-", "").replace(":", "")
+            # Parse properly to avoid timezone messes breaking EXDATE format YYYYMMDDTHHMMSS
+            from dateutil.parser import isoparse
+            try:
+                dt_obj = isoparse(date_str)
+                dt_formatted_local = dt_obj.strftime("%Y%m%dT%H%M%S")
+            except Exception:
+                dt_formatted_local = date_str[:19].replace("-", "").replace(":", "")
+                
             if "EXDATE" not in alocacao.recurrency:
                 alocacao.recurrency += f"\nEXDATE:{dt_formatted_local}"
             else:
@@ -435,22 +441,29 @@ class AllocationService(BaseService[Alocacao]):
             # Delete single instance in Google Calendar
             if alocacao.status == "APPROVED" and alocacao.google_event_id:
                 try:
-                    from app.services.datetime_utils import ensure_app_timezone, ensure_utc
+                    from app.services.infra.datetime_utils import ensure_app_timezone, ensure_utc
                     from datetime import datetime
                     
-                    local_dt = ensure_app_timezone(datetime.fromisoformat(date_str))
+                    local_dt = ensure_app_timezone(isoparse(date_str))
                     utc_dt = ensure_utc(local_dt)
                     utc_formatted = utc_dt.strftime("%Y%m%dT%H%M%SZ")
                     instance_google_id = f"{alocacao.google_event_id}_{utc_formatted}"
                     
-                    self._require_google_credentials(db, current_user.id)
-                    google_calendar.delete_event(db=db, user_id=current_user.id, event_id=instance_google_id)
+                    # Usa o credencial do dono da alocação ou de quem já tenha credencial
+                    creds_row = db.query(GoogleCredential).first()
+                    if creds_row:
+                        google_calendar.delete_event(db=db, user_id=creds_row.user_id, event_id=instance_google_id)
                 except Exception as e:
                     print(f"Failed to delete single instance in Google Calendar: {e}")
             return
 
         if alocacao.status == "APPROVED" and alocacao.google_event_id:
-            self._sync_google_delete_if_exists(db, alocacao, current_user)
+            try:
+                creds_row = db.query(GoogleCredential).first()
+                if creds_row:
+                    google_calendar.delete_event(db=db, user_id=creds_row.user_id, event_id=alocacao.google_event_id)
+            except Exception as e:
+                print(f"Erro ao deletar evento no Google: {e}")
 
         # Quando a alocação derivou de uma solicitação aprovada, rejeita a solicitação
         # para que ela reflita o estado real na lista de solicitações.
