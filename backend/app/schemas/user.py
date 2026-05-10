@@ -41,8 +41,6 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     senha: str
-    matricula: Optional[str] = None
-    siape: Optional[str] = None
     departamento: Optional[str] = None
     # Alias para frontend
     papel: Optional[str] = Field(None, validation_alias="papel")
@@ -60,9 +58,7 @@ class UserUpdate(BaseModel):
     tipo_usuario: Optional[int] = None
     senha: Optional[str] = None
     senha_atual: Optional[str] = None
-    matricula: Optional[str] = None
     cursoId: Optional[int] = Field(None, alias="cursoId")
-    siape: Optional[int] = None
     departamento: Optional[str] = None
     status: Optional[str] = None
     papel: Optional[str] = None
@@ -74,8 +70,6 @@ class UserUpdate(BaseModel):
 
 class UserOut(UserBase):
     id: int
-    matricula: Optional[str] = None
-    siape: Optional[str] = None
     departamento: Optional[str] = None
     status: str
     created_at: datetime

@@ -14,12 +14,11 @@ import {
 const ABAS_CONFIG = {
     Professores: {
         icon: Users, color: '#1d4ed8', colorBg: '#dbeafe',
-        colunas: ['Nome', 'Email', 'Matricula'],
+        colunas: ['Nome', 'Email'],
         endpoint: '/professors/',
         toPayload: (row) => ({
-            nomeProf:      row['Nome']?.toString().trim(),
-            emailProf:     row['Email']?.toString().trim(),
-            matriculaProf: row['Matricula']?.toString().trim(),
+            nomeProf:  row['Nome']?.toString().trim(),
+            emailProf: row['Email']?.toString().trim(),
         }),
         label: (row) => row['Nome'],
     },
@@ -28,7 +27,7 @@ const ABAS_CONFIG = {
         colunas: ['Nome', 'Codigo'],
         endpoint: '/disciplines/',
         toPayload: (row) => ({
-            nomeDisciplina:      row['Nome']?.toString().trim(),
+            nomeDisciplina: row['Nome']?.toString().trim(),
             matriculaDisciplina: row['Codigo']?.toString().trim(),
         }),
         label: (row) => row['Nome'],
@@ -38,9 +37,9 @@ const ABAS_CONFIG = {
         colunas: ['Nome', 'Sigla', 'Cor'],
         endpoint: '/courses/',
         toPayload: (row) => ({
-            nomeCurso:  row['Nome']?.toString().trim(),
+            nomeCurso: row['Nome']?.toString().trim(),
             siglaCurso: row['Sigla']?.toString().trim(),
-            corCurso:   row['Cor']?.toString().trim() || '#3b82f6',
+            corCurso: row['Cor']?.toString().trim() || '#3b82f6',
         }),
         label: (row) => row['Nome'],
     },
@@ -68,10 +67,10 @@ const ABAS_CONFIG = {
 const baixarModelo = () => {
     const wb = XLSX.utils.book_new()
     const exemplos = {
-        Professores: [['Nome', 'Email', 'Matricula'], ['João Silva', 'joao.silva@uepa.br', '123456'], ['Maria Souza', 'maria.souza@uepa.br', '654321']],
+        Professores: [['Nome', 'Email'], ['João Silva', 'joao.silva@uepa.br'], ['Maria Souza', 'maria.souza@uepa.br']],
         Disciplinas: [['Nome', 'Codigo'], ['Cálculo I', 'MAT001'], ['Física Geral', 'FIS001']],
-        Cursos:      [['Nome', 'Sigla', 'Cor'], ['Engenharia de Software', 'BES', '#3b82f6'], ['Licenciatura em Matemática', 'MAT', '#f59e0b']],
-        Salas:       [['Nome', 'Tipo'], ['Sala 01', 'Sala de Aula'], ['Lab 01', 'Laboratório']],
+        Cursos: [['Nome', 'Sigla', 'Cor'], ['Engenharia de Software', 'BES', '#3b82f6'], ['Licenciatura em Matemática', 'MAT', '#f59e0b']],
+        Salas: [['Nome', 'Tipo'], ['Sala 01', 'Sala de Aula'], ['Lab 01', 'Laboratório']],
     }
     Object.entries(exemplos).forEach(([nome, dados]) => {
         const ws = XLSX.utils.aoa_to_sheet(dados)
@@ -89,9 +88,9 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
     const [errosPreview, setErrosPreview] = useState({})
     const [resultado, setResultado] = useState({})
     const [nomeArquivo, setNomeArquivo] = useState('')
-    
+
     // Novos estados para controle de exportação
-    const [exportando, setExportando] = useState(null) 
+    const [exportando, setExportando] = useState(null)
     const [formatoDownload, setFormatoDownload] = useState('excel') // 'excel' | 'pdf'
 
     const handleArquivo = (e) => {
@@ -99,7 +98,7 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
         if (!file) return
         setNomeArquivo(file.name)
         const reader = new FileReader()
-        
+
         // Usando readAsArrayBuffer conforme correção anterior
         reader.onload = (evt) => {
             const wb = XLSX.read(evt.target.result, { type: 'array' })
@@ -154,11 +153,11 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
             if (tipo === 'cadastros') {
                 const res = await api.get('/reports/base')
                 const { professors, disciplines, courses, rooms } = res.data
-                
+
                 conjuntosDeDados.push({
                     titulo: 'Professores',
-                    colunas: ['Nome', 'Email', 'Matrícula'],
-                    linhas: professors.map(p => ({ Nome: p.nomeProf, Email: p.emailProf, Matricula: p.matriculaProf }))
+                    colunas: ['Nome', 'Email'],
+                    linhas: professors.map(p => ({ Nome: p.nomeProf, Email: p.emailProf }))
                 })
                 conjuntosDeDados.push({
                     titulo: 'Disciplinas',
@@ -175,7 +174,7 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
                     colunas: ['Nome', 'Tipo'],
                     linhas: rooms.map(s => ({ Nome: s.nomeSala, Tipo: s.tipoSala || 'Sala de Aula' }))
                 })
-            } 
+            }
             else if (tipo === 'usuarios') {
                 const res = await api.get('/reports/users')
                 conjuntosDeDados.push({
@@ -204,7 +203,7 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
                     XLSX.utils.book_append_sheet(wb, ws, conjunto.titulo.substring(0, 31)) // Limite de 31 chars por aba
                 })
                 XLSX.writeFile(wb, `relatorio-${tipo}-sca-uepa-${dataStr}.xlsx`)
-            } 
+            }
             else if (formatoDownload === 'pdf') {
                 const doc = new jsPDF()
                 let yAtual = 15
@@ -221,9 +220,9 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
 
                     doc.setFontSize(12)
                     doc.text(conjunto.titulo, 14, yAtual)
-                    
+
                     const linhasFormatoArray = conjunto.linhas.map(linha => Object.values(linha))
-                    
+
                     autoTable(doc, {
                         head: [conjunto.colunas],
                         body: linhasFormatoArray.length > 0 ? linhasFormatoArray : [['Nenhum registro encontrado']],
@@ -233,7 +232,7 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
                         headStyles: { fillColor: [28, 26, 163] }, // Cor azul do header
                         margin: { top: 15 }
                     })
-                    
+
                     yAtual = doc.lastAutoTable.finalY + 15 // Atualiza a posição Y para a próxima tabela
                 })
 
@@ -283,15 +282,15 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Gerar Relatórios</p>
-                                    
+
                                     {/* Seletor de Formato */}
                                     <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                                        <button 
+                                        <button
                                             onClick={() => setFormatoDownload('excel')}
                                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${formatoDownload === 'excel' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                                             <FileSpreadsheet size={14} /> Excel
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => setFormatoDownload('pdf')}
                                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${formatoDownload === 'pdf' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                                             <FileText size={14} /> PDF
@@ -358,7 +357,7 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
                                 <div className="flex justify-between items-center mb-3">
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Subir dados de planilha</p>
                                     <button onClick={baixarModelo} className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1">
-                                        <Download size={12}/> Modelo.xlsx
+                                        <Download size={12} /> Modelo.xlsx
                                     </button>
                                 </div>
 
@@ -379,61 +378,61 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
 
                     {/* ── PREVIEW ── */}
                     {etapa === 'preview' && (
-                         <>
-                         <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                             <FileSpreadsheet size={15} className="text-gray-500 shrink-0" />
-                             <p className="text-xs text-gray-600 font-semibold truncate flex-1">{nomeArquivo}</p>
-                             <button onClick={() => { setEtapa('inicio'); setDadosPreview({}); setErrosPreview({}) }}
-                                 className="text-xs text-indigo-500 hover:underline shrink-0">Trocar</button>
-                         </div>
+                        <>
+                            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                                <FileSpreadsheet size={15} className="text-gray-500 shrink-0" />
+                                <p className="text-xs text-gray-600 font-semibold truncate flex-1">{nomeArquivo}</p>
+                                <button onClick={() => { setEtapa('inicio'); setDadosPreview({}); setErrosPreview({}) }}
+                                    className="text-xs text-indigo-500 hover:underline shrink-0">Trocar</button>
+                            </div>
 
-                         {Object.entries(ABAS_CONFIG).map(([aba, cfg]) => {
-                             const rows = dadosPreview[aba]
-                             const erros = errosPreview[aba]
-                             if (!rows) return null
-                             const Icon = cfg.icon
-                             return (
-                                 <div key={aba} className="rounded-xl border overflow-hidden"
-                                     style={{ borderColor: erros ? '#fecaca' : '#e5e7eb' }}>
-                                     <div className="flex items-center gap-3 px-4 py-3"
-                                         style={{ background: erros ? '#fef2f2' : cfg.colorBg + '60' }}>
-                                         <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: cfg.colorBg }}>
-                                             <Icon size={14} style={{ color: cfg.color }} />
-                                         </div>
-                                         <span className="text-sm font-bold text-gray-800 flex-1">{aba}</span>
-                                         <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                                             style={{ background: cfg.colorBg, color: cfg.color }}>
-                                             {rows.length} {rows.length === 1 ? 'registro' : 'registros'}
-                                         </span>
-                                     </div>
-                                     {erros && (
-                                         <div className="px-4 py-2 bg-red-50">
-                                             {erros.slice(0, 2).map((e, i) => (
-                                                 <p key={i} className="text-xs text-red-500 flex items-center gap-1">
-                                                     <AlertCircle size={11} className="shrink-0" />{e}
-                                                 </p>
-                                             ))}
-                                             {erros.length > 2 && <p className="text-xs text-red-400">+{erros.length - 2} outros erros</p>}
-                                         </div>
-                                     )}
-                                     <div className="px-4 py-2 divide-y divide-gray-50">
-                                         {rows.slice(0, 3).map((row, i) => (
-                                             <p key={i} className="text-xs text-gray-600 py-1 truncate">{cfg.label(row) || '—'}</p>
-                                         ))}
-                                         {rows.length > 3 && <p className="text-xs text-gray-400 py-1">+{rows.length - 3} mais...</p>}
-                                     </div>
-                                 </div>
-                             )
-                         })}
+                            {Object.entries(ABAS_CONFIG).map(([aba, cfg]) => {
+                                const rows = dadosPreview[aba]
+                                const erros = errosPreview[aba]
+                                if (!rows) return null
+                                const Icon = cfg.icon
+                                return (
+                                    <div key={aba} className="rounded-xl border overflow-hidden"
+                                        style={{ borderColor: erros ? '#fecaca' : '#e5e7eb' }}>
+                                        <div className="flex items-center gap-3 px-4 py-3"
+                                            style={{ background: erros ? '#fef2f2' : cfg.colorBg + '60' }}>
+                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: cfg.colorBg }}>
+                                                <Icon size={14} style={{ color: cfg.color }} />
+                                            </div>
+                                            <span className="text-sm font-bold text-gray-800 flex-1">{aba}</span>
+                                            <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                                style={{ background: cfg.colorBg, color: cfg.color }}>
+                                                {rows.length} {rows.length === 1 ? 'registro' : 'registros'}
+                                            </span>
+                                        </div>
+                                        {erros && (
+                                            <div className="px-4 py-2 bg-red-50">
+                                                {erros.slice(0, 2).map((e, i) => (
+                                                    <p key={i} className="text-xs text-red-500 flex items-center gap-1">
+                                                        <AlertCircle size={11} className="shrink-0" />{e}
+                                                    </p>
+                                                ))}
+                                                {erros.length > 2 && <p className="text-xs text-red-400">+{erros.length - 2} outros erros</p>}
+                                            </div>
+                                        )}
+                                        <div className="px-4 py-2 divide-y divide-gray-50">
+                                            {rows.slice(0, 3).map((row, i) => (
+                                                <p key={i} className="text-xs text-gray-600 py-1 truncate">{cfg.label(row) || '—'}</p>
+                                            ))}
+                                            {rows.length > 3 && <p className="text-xs text-gray-400 py-1">+{rows.length - 3} mais...</p>}
+                                        </div>
+                                    </div>
+                                )
+                            })}
 
-                         {Object.keys(dadosPreview).length === 0 && (
-                             <div className="text-center py-8 text-gray-400">
-                                 <AlertCircle size={32} className="mx-auto mb-2 opacity-40" />
-                                 <p className="text-sm font-semibold">Nenhuma aba reconhecida</p>
-                                 <p className="text-xs mt-1">O arquivo deve ter abas: Professores, Disciplinas, Cursos, Salas</p>
-                             </div>
-                         )}
-                     </>
+                            {Object.keys(dadosPreview).length === 0 && (
+                                <div className="text-center py-8 text-gray-400">
+                                    <AlertCircle size={32} className="mx-auto mb-2 opacity-40" />
+                                    <p className="text-sm font-semibold">Nenhuma aba reconhecida</p>
+                                    <p className="text-xs mt-1">O arquivo deve ter abas: Professores, Disciplinas, Cursos, Salas</p>
+                                </div>
+                            )}
+                        </>
                     )}
 
                     {/* ── IMPORTANDO ── */}
@@ -448,33 +447,33 @@ const ImportarPlanilha = ({ onClose, onImportado }) => {
                     {/* ── RESULTADO ── */}
                     {etapa === 'resultado' && (
                         <>
-                        <div className="text-center py-4">
-                            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
-                                style={{ background: 'linear-gradient(135deg,#1c1aa3,#7c3aed)' }}>
-                                <CheckCircle2 size={28} className="text-white" />
-                            </div>
-                            <p className="text-lg font-black text-gray-900">Importação concluída!</p>
-                        </div>
-                        {Object.entries(resultado).map(([aba, res]) => {
-                            const cfg = ABAS_CONFIG[aba]
-                            const Icon = cfg.icon
-                            return (
-                                <div key={aba} className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50">
-                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: cfg.colorBg }}>
-                                        <Icon size={14} style={{ color: cfg.color }} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-sm font-bold text-gray-800">{aba}</p>
-                                        <p className="text-xs text-gray-500">{res.total} registros processados</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-black text-green-600">{res.ok} importados</p>
-                                        {res.erros > 0 && <p className="text-xs text-red-400">{res.erros} já existiam</p>}
-                                    </div>
+                            <div className="text-center py-4">
+                                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
+                                    style={{ background: 'linear-gradient(135deg,#1c1aa3,#7c3aed)' }}>
+                                    <CheckCircle2 size={28} className="text-white" />
                                 </div>
-                            )
-                        })}
-                    </>
+                                <p className="text-lg font-black text-gray-900">Importação concluída!</p>
+                            </div>
+                            {Object.entries(resultado).map(([aba, res]) => {
+                                const cfg = ABAS_CONFIG[aba]
+                                const Icon = cfg.icon
+                                return (
+                                    <div key={aba} className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50">
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: cfg.colorBg }}>
+                                            <Icon size={14} style={{ color: cfg.color }} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-bold text-gray-800">{aba}</p>
+                                            <p className="text-xs text-gray-500">{res.total} registros processados</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-black text-green-600">{res.ok} importados</p>
+                                            {res.erros > 0 && <p className="text-xs text-red-400">{res.erros} já existiam</p>}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </>
                     )}
                 </div>
 

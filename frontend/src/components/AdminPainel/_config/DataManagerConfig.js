@@ -6,16 +6,12 @@ export const CONFIG = {
         title: 'Professores', singular: 'Professor', endpoint: 'professors', labelKey: 'nomeProf',
         icon: Users, color: '#1d4ed8', colorBg: '#dbeafe',
         fields: [
-            { front: 'nome',      back: 'nomeProf',      label: 'Nome completo', type: 'text', ph: 'Ex: João Silva' },
-            { front: 'email',     back: 'emailProf',     label: 'E-mail', type: 'email', ph: 'joao@uepa.br' },
-            { front: 'matricula', back: 'matriculaProf',  label: 'Matrícula (opcional)', type: 'text', ph: 'Ex: 0012345' },
-            { front: 'siape',     back: 'siapeProf',      label: 'Código SIAPE (opcional)', type: 'text', ph: 'Ex: 1234567' },
+            { front: 'nome',  back: 'nomeProf',  label: 'Nome completo', type: 'text',  ph: 'Ex: João Silva' },
+            { front: 'email', back: 'emailProf', label: 'E-mail',        type: 'email', ph: 'joao@uepa.br' },
         ],
         validationSchema: z.object({
-            nomeProf: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
+            nomeProf:  z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
             emailProf: z.string().email('E-mail inválido'),
-            matriculaProf: z.string().optional().or(z.literal('')),
-            siapeProf: z.string().optional().or(z.literal('')),
         })
     },
     disciplinas: {

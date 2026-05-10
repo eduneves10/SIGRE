@@ -124,7 +124,6 @@ const AdminPainel = () => {
                 id: s.idSolicitacao,
                 solicitante: s.solicitante,
                 email: s.email,
-                matricula: s.matricula,
                 papel: s.papel,
                 motivo: s.motivo,
                 descricao: s.descricao,
@@ -466,7 +465,6 @@ const AdminPainel = () => {
                                                     <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-2">
                                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Identificação</p>
                                                         <InfoRow label="E-mail" value={s.email} />
-                                                        <InfoRow label={s.papel === 'professor' ? 'SIAPE' : 'Matrícula'} value={s.matricula || '—'} />
                                                         <InfoRow label="Papel" value={papelLabel} />
                                                     </div>
 

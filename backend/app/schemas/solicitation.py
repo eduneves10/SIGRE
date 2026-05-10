@@ -6,7 +6,7 @@ from app.schemas.room import RoomOut
 class SolicitationBase(BaseModel):
     solicitante: str
     email: str
-    matricula: str
+    matricula: Optional[str] = None
     papel: str
     motivo: str
     descricao: str

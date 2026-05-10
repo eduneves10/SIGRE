@@ -17,9 +17,7 @@ class Usuario(Base):
     tipo_usuario = Column(Integer, server_default=text("1"))
     
     # Campos específicos
-    matricula = Column(String(50), nullable=True)
     fk_curso = Column(Integer, ForeignKey("cursos.id"), nullable=True)
-    siape = Column(String(50), nullable=True)
     departamento = Column(String(100), nullable=True)
     
     # Relacionamentos

@@ -23,7 +23,7 @@ const DataList = ({ list, cfg, activeTab, onEdit, onDelete, onAdd }) => {
     return (
         <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
             {list.map(item => {
-                let hiddenSigla = item.sigla || item.matriculaDisciplina || item.matricula || '';
+                let hiddenSigla = item.sigla || item.matriculaDisciplina || '';
                 if (typeof hiddenSigla === 'string' && hiddenSigla.includes('| META:')) {
                     hiddenSigla = hiddenSigla.split('| META:')[0].trim();
                 }

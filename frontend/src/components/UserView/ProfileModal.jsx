@@ -143,10 +143,6 @@ const ProfileModal = ({ userRole, onClose }) => {
     const papel = perfil?.papel || userRole || 'aluno'
     const cfg = PAPEL_CFG[papel] ?? PAPEL_CFG.aluno
     const PapelIcon = cfg.Icon
-    const idDoc = {
-        label: papel === 'professor' ? 'SIAPE' : 'Matrícula',
-        value: (papel === 'professor' ? perfil?.siape : null) ?? perfil?.matricula ?? '—',
-    }
 
     return (
         <div
@@ -244,10 +240,6 @@ const ProfileModal = ({ userRole, onClose }) => {
                                             <div>
                                                 <label className={cls.label}>E-mail</label>
                                                 <div className={cls.readonly}>{perfil?.email || '—'}</div>
-                                            </div>
-                                            <div>
-                                                <label className={cls.label}>{idDoc.label}</label>
-                                                <div className={cls.readonly}>{idDoc.value}</div>
                                             </div>
                                             {perfil?.username && (
                                                 <div>

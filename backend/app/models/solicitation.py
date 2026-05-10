@@ -9,7 +9,7 @@ class Solicitacao(Base):
     id = Column(Integer, primary_key=True, index=True)
     solicitante = Column(String(150), nullable=False)
     email = Column(String(150), nullable=False, index=True)
-    matricula = Column(String(50), nullable=False)
+    matricula = Column(String(50), nullable=True)
     papel = Column(String(50), nullable=False) # aluno, professor, etc.
     
     motivo = Column(String(100), nullable=False)

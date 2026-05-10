@@ -23,7 +23,6 @@ class SolicitationService(BaseService[Solicitacao]):
         db_data = {
             "solicitante": data.solicitante,
             "email": data.email,
-            "matricula": data.matricula,
             "papel": data.papel,
             "motivo": data.motivo,
             "descricao": data.descricao,
