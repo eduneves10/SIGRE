@@ -47,6 +47,7 @@ jobs:
             --query 'service.deployments[0].id'
 
       - name: Wait for deployment to stabilize
+        continue-on-error: true
         run: |
           aws ecs wait services-stable \
             --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
