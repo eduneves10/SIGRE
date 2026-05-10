@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: sigre_db
+    container_name: sigra_db
     restart: unless-stopped
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
@@ -19,7 +19,7 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: sigre_backend
+    container_name: sigra_backend
     restart: unless-stopped
     depends_on:
       db:
@@ -42,7 +42,7 @@ services:
 
   frontend:
     image: node:20-alpine
-    container_name: sigre_frontend
+    container_name: sigra_frontend
     working_dir: /app
     tty: true
     stdin_open: true

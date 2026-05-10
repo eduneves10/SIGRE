@@ -32,10 +32,10 @@ clean: ## Remove containers, redes e imagens locais
 reset: clean dev ## Faz um reset completo e sobe em modo dev
 
 shell-backend: ## Acessa o terminal do backend (Dev)
-	docker exec -it sigre_backend_dev bash
+	docker exec -it sigra_backend bash
 
 shell-db: ## Acessa o terminal do banco de dados (Dev)
-	docker exec -it sigre_db_dev psql -U user -d alocacoes
+	docker exec -it sigra_db psql -U user -d alocacoes
 
 help: ## Mostra esta ajuda
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
