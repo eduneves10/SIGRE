@@ -37,14 +37,30 @@ jobs:
           docker push ${{ secrets.ECR_REPOSITORY_URL }}:${{ github.sha }}
           docker push ${{ secrets.ECR_REPOSITORY_URL }}:latest
 
-      - name: Force new ECS deployment
+      - name: Register new task definition with updated image
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition sigra-prod-backend \
+            --query 'taskDefinition' \
+            --output json \
+          | jq --arg IMAGE "${{ secrets.ECR_REPOSITORY_URL }}:${{ github.sha }}" \
+            '.containerDefinitions[0].image = $IMAGE
+             | del(.taskDefinitionArn,.revision,.status,.requiresAttributes,.placementConstraints,.compatibilities,.registeredAt,.registeredBy)' \
+          > /tmp/task-def.json
+
+          NEW_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file:///tmp/task-def.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          echo "NEW_TASK_DEF_ARN=$NEW_ARN" >> "$GITHUB_ENV"
+
+      - name: Deploy new task definition
         run: |
           aws ecs update-service \
             --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
             --service ${{ secrets.ECS_SERVICE_NAME }} \
-            --force-new-deployment \
-            --output text \
-            --query 'service.deployments[0].id'
+            --task-definition "$NEW_TASK_DEF_ARN"
 
       - name: Wait for deployment to stabilize
         continue-on-error: true
