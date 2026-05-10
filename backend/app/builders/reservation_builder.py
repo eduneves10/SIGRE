@@ -11,6 +11,8 @@ from datetime import datetime
 from dateutil.rrule import rrulestr
 
 from app.models import Alocacao
+from app.models.room import Sala
+from app.models.user import Usuario
 from app.services.infra.datetime_utils import APP_TIMEZONE_NAME, from_storage_datetime
 
 PLATFORM_EVENT_SOURCE = "alocacoes"
@@ -21,15 +23,81 @@ def build_event_summary(tipo: Optional[str], uso: Optional[str], room_label: Opt
     Gera um título consistente para UI e Google Calendar.
     """
     event_type = (tipo or "RESERVA").strip().upper()
-    subject = (uso or "").strip() or (room_label or "").strip() or "Reserva"
-    return f"[{event_type}] {subject}"
+    uso_clean = (uso or "").strip()
+
+    if uso_clean and room_label:
+        return f"[{event_type}] {uso_clean} – {room_label}"
+    elif uso_clean:
+        return f"[{event_type}] {uso_clean}"
+    elif room_label:
+        return f"[{event_type}] {room_label}"
+    else:
+        return f"[{event_type}] Reserva"
 
 
-def build_event_description(justificativa: Optional[str]) -> str:
+def build_event_description(
+    justificativa: Optional[str],
+    *,
+    room: Optional[Sala] = None,
+    applicant: Optional[Usuario] = None,
+    professor: Optional[Usuario] = None,
+    reservation: Optional[Alocacao] = None,
+) -> str:
     """
-    Mantém a descrição com conteúdo humano, sem serialização de metadados.
+    Gera a descrição do evento com todas as informações relevantes para o usuário.
     """
-    return (justificativa or "").strip()
+    lines: list[str] = []
+
+    if room is not None:
+        sala_label = (getattr(room, "codigo_sala", "") or "").strip() or str(getattr(room, "id", ""))
+        sala_desc = (getattr(room, "descricao_sala", "") or "").strip()
+        if sala_desc and sala_desc != sala_label:
+            lines.append(f"Sala: {sala_label} – {sala_desc}")
+        else:
+            lines.append(f"Sala: {sala_label}")
+
+    if applicant is not None:
+        nome = (getattr(applicant, "nome", "") or "").strip()
+        email = (getattr(applicant, "email", "") or "").strip()
+        if nome and email:
+            lines.append(f"Solicitante: {nome} ({email})")
+        elif nome:
+            lines.append(f"Solicitante: {nome}")
+        elif email:
+            lines.append(f"Solicitante: {email}")
+
+    if professor is not None:
+        nome = (getattr(professor, "nome", "") or "").strip()
+        email = (getattr(professor, "email", "") or "").strip()
+        if nome and email:
+            lines.append(f"Professor: {nome} ({email})")
+        elif nome:
+            lines.append(f"Professor: {nome}")
+        elif email:
+            lines.append(f"Professor: {email}")
+
+    if reservation is not None:
+        if reservation.dia_semana and reservation.dia_semana.strip():
+            lines.append(f"Dia: {reservation.dia_semana.strip()}")
+        uso_clean = (reservation.uso or "").strip()
+        if uso_clean:
+            lines.append(f"Uso: {uso_clean}")
+
+    justificativa_clean = (justificativa or "").strip()
+    if justificativa_clean:
+        if lines:
+            lines.append("")
+            lines.append("Justificativa:")
+        lines.append(justificativa_clean)
+
+    if reservation is not None:
+        oficio_clean = (reservation.oficio or "").strip()
+        if oficio_clean:
+            if lines:
+                lines.append("")
+            lines.append(f"Ofício: {oficio_clean}")
+
+    return "\n".join(lines)
 
 
 def build_event_private_metadata(reservation: Alocacao, status_override: Optional[str] = None) -> dict[str, str]:

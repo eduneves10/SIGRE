@@ -294,6 +294,7 @@ class AllocationService(BaseService[Alocacao]):
         applicant = db.query(Usuario).filter(Usuario.id == alocacao.fk_usuario).first()
         attendees = [applicant.email] if applicant and applicant.email else []
 
+        professor = None
         if alocacao.fk_professor:
             professor = db.query(Usuario).filter(Usuario.id == alocacao.fk_professor).first()
             if professor and professor.email and professor.email not in attendees:
@@ -302,8 +303,14 @@ class AllocationService(BaseService[Alocacao]):
         created = google_calendar.create_event(
             db=db,
             user_id=current_user.id,
-            summary=build_event_summary(alocacao.tipo, alocacao.uso, f"Reserva Sala {room_label}"),
-            description=build_event_description(alocacao.justificativa),
+            summary=build_event_summary(alocacao.tipo, alocacao.uso, room_label),
+            description=build_event_description(
+                alocacao.justificativa,
+                room=room,
+                applicant=applicant,
+                professor=professor,
+                reservation=alocacao,
+            ),
             start_dt_utc=start_dt,
             end_dt_utc=end_dt,
             location=room.descricao_sala,
@@ -366,22 +373,30 @@ class AllocationService(BaseService[Alocacao]):
         start_dt = ensure_utc(from_storage_datetime(alocacao.dia_horario_inicio))
         end_dt = ensure_utc(from_storage_datetime(alocacao.dia_horario_saida))
         room_label = room.codigo_sala or str(room.id)
+
+        applicant = db.query(Usuario).filter(Usuario.id == alocacao.fk_usuario).first()
+        professor = None
+        if alocacao.fk_professor:
+            professor = db.query(Usuario).filter(Usuario.id == alocacao.fk_professor).first()
+
         patch: dict = {
-            "summary": build_event_summary(alocacao.tipo, alocacao.uso, f"Reserva Sala {room_label}"),
-            "description": build_event_description(alocacao.justificativa),
+            "summary": build_event_summary(alocacao.tipo, alocacao.uso, room_label),
+            "description": build_event_description(
+                alocacao.justificativa,
+                room=room,
+                applicant=applicant,
+                professor=professor,
+                reservation=alocacao,
+            ),
             "start": {"dateTime": start_dt.isoformat(), "timeZone": "UTC"},
             "end": {"dateTime": end_dt.isoformat(), "timeZone": "UTC"},
             "extendedProperties": {"private": build_event_private_metadata(alocacao)},
         }
         
-        applicant = db.query(Usuario).filter(Usuario.id == alocacao.fk_usuario).first()
         attendees = [applicant.email] if applicant and applicant.email else []
+        if professor and professor.email and professor.email not in attendees:
+            attendees.append(professor.email)
 
-        if alocacao.fk_professor:
-            professor = db.query(Usuario).filter(Usuario.id == alocacao.fk_professor).first()
-            if professor and professor.email and professor.email not in attendees:
-                attendees.append(professor.email)
-                
         patch["attendees"] = [{"email": email} for email in attendees]
 
         if room.descricao_sala:
