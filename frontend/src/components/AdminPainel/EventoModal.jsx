@@ -111,9 +111,10 @@ const EventoModal = ({ onClose, onSaved }) => {
     const getSala = () => salas.find(s => String(s.id) === String(form.salaId))
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
-            <div className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl"
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 overflow-y-auto"
+            style={{ background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }}>
+            <div className="w-full max-w-2xl max-h-[95vh] overflow-y-auto">
+            <div className="w-full rounded-2xl overflow-hidden shadow-2xl"
                 style={{ border: '1px solid #e5e7eb' }}>
 
                 {/* Header */}
@@ -257,6 +258,7 @@ const EventoModal = ({ onClose, onSaved }) => {
                         )}
                     </button>
                 </div>
+            </div>
             </div>
         </div>
     )
