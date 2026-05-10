@@ -120,8 +120,8 @@ def test_reports_history_course_info(client, admin_token_headers, db_session):
     
     found = False
     for item in data:
-        if item.get("disciplina") == "Test Allocation":
-            assert item.get("curso") == course.nome
+        if item.get("Disciplina") == "Test Allocation":
+            assert item.get("Curso") == course.nome
             found = True
             break
     assert found
