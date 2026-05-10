@@ -1,29 +1,27 @@
-from pydantic import BaseModel, Field, ConfigDict, computed_field, AliasChoices
+from pydantic import BaseModel, Field, ConfigDict, AliasChoices
 from typing import Optional
+
 
 class ProfessorBase(BaseModel):
     nomeProf: str = Field(..., validation_alias=AliasChoices("nomeProf", "nome"), serialization_alias="nomeProf")
     emailProf: Optional[str] = Field(None, validation_alias=AliasChoices("emailProf", "email"), serialization_alias="emailProf")
-    matriculaProf: Optional[str] = Field(None, validation_alias=AliasChoices("matriculaProf", "matricula"), serialization_alias="matriculaProf")
+
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
+
 
 class ProfessorCreate(BaseModel):
-    """matriculaProf é opcional (SIAPE / matrícula funcional)."""
-
     nomeProf: str = Field(..., validation_alias=AliasChoices("nomeProf", "nome"))
     emailProf: str = Field(..., validation_alias=AliasChoices("emailProf", "email"))
-    matriculaProf: Optional[str] = Field(None, validation_alias=AliasChoices("matriculaProf", "matricula"))
+
+    model_config = ConfigDict(populate_by_name=True)
+
 
 class ProfessorUpdate(BaseModel):
     nomeProf: Optional[str] = Field(None, validation_alias=AliasChoices("nomeProf", "nome"))
     emailProf: Optional[str] = Field(None, validation_alias=AliasChoices("emailProf", "email"))
-    matriculaProf: Optional[str] = Field(None, validation_alias=AliasChoices("matriculaProf", "matricula"))
+
+    model_config = ConfigDict(populate_by_name=True)
+
 
 class ProfessorOut(ProfessorBase):
     id: int
-    
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-
-    @computed_field
-    @property
-    def idProfessor(self) -> int:
-        return self.id

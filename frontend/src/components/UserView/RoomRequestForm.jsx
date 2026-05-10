@@ -34,17 +34,6 @@ const readonlyBoxClass = `
     text-gray-700 text-sm select-none cursor-default
 `
 
-/** Valor enviado em `matricula` na solicitação: aluno usa matrícula; professor prioriza SIAPE. */
-function matriculaParaSolicitacao(me, papel) {
-    const p = papel || me?.papel || 'aluno'
-    if (p === 'professor') {
-        const siape = me?.siape != null && String(me.siape).trim() !== '' ? String(me.siape).trim() : ''
-        if (siape) return siape
-        const mat = me?.matricula != null && String(me.matricula).trim() !== '' ? String(me.matricula).trim() : ''
-        return mat
-    }
-    return me?.matricula != null && String(me.matricula).trim() !== '' ? String(me.matricula).trim() : ''
-}
 
 const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
     const { salas, horarios } = useSchedule()
@@ -79,17 +68,12 @@ const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
                     setLocked({
                         solicitante: me.nome || '',
                         email: me.email || '',
-                        matricula: matriculaParaSolicitacao(me, papelEfetivo),
                     })
                 } catch {
                     if (cancelled) return
                     const nome = localStorage.getItem('userName') || ''
                     const email = localStorage.getItem('userEmail') || ''
-                    const matAluno = localStorage.getItem('userMatricula') || ''
-                    const siape = localStorage.getItem('userSiape') || ''
-                    const idDoc =
-                        userRole === 'professor' ? (siape || matAluno) : matAluno
-                    setLocked({ solicitante: nome, email, matricula: idDoc })
+                    setLocked({ solicitante: nome, email })
                 } finally {
                     if (!cancelled) setLoadingProfile(false)
                 }
@@ -126,10 +110,6 @@ const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!locked || !String(locked.matricula || '').trim()) {
-            alert('Matrícula ou SIAPE não consta no seu perfil. Solicite ao administrador que complete seu cadastro.')
-            return
-        }
         if (form.horarioInicio >= form.horarioFim) {
             alert('O horário de término deve ser maior que o de início.')
             return
@@ -142,7 +122,6 @@ const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
             const payload = {
                 solicitante: locked.solicitante,
                 email: locked.email,
-                matricula: locked.matricula,
                 papel: userRole || 'aluno',
                 motivo: MOTIVOS.find(m => m.value === form.motivo)?.label || form.motivo,
                 descricao: form.descricao,
@@ -190,136 +169,119 @@ const RoomRequestForm = ({ onClose, userRole, onSolicitacaoCriada }) => {
                         <Row label="Dia" value={`${form.diaSemana}${form.dataEvento ? ` (${form.dataEvento.split('-').reverse().join('/')})` : ''}`} />
                         <Row label="Horário" value={`${form.horarioInicio} – ${form.horarioFim}`} />
                     </div >
-    <button onClick={onClose}
-        className="w-full py-3 rounded-xl font-bold text-white text-sm hover:-translate-y-0.5 transition-all"
-        style={{ background: 'linear-gradient(135deg, #1c1aa3, #7c3aed)', boxShadow: '0 8px 24px rgba(28,26,163,0.35)' }}>
-        Fechar
-    </button>
+                    <button onClick={onClose}
+                        className="w-full py-3 rounded-xl font-bold text-white text-sm hover:-translate-y-0.5 transition-all"
+                        style={{ background: 'linear-gradient(135deg, #1c1aa3, #7c3aed)', boxShadow: '0 8px 24px rgba(28,26,163,0.35)' }}>
+                        Fechar
+                    </button>
                 </div >
-    <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
+                <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
             </div >
         )
     }
 
-// ── Step 1: Formulário ──
-return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}>
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col"
-            style={{ animation: 'fadeInUp 0.25s ease' }}>
+    // ── Step 1: Formulário ──
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}>
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col"
+                style={{ animation: 'fadeInUp 0.25s ease' }}>
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100"
-                style={{ background: 'linear-gradient(135deg, #1c1aa3 0%, #150355 100%)' }}>
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
-                        <Building2 size={18} className="text-white" />
+                {/* Header */}
+                <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100"
+                    style={{ background: 'linear-gradient(135deg, #1c1aa3 0%, #150355 100%)' }}>
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
+                            <Building2 size={18} className="text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-black text-white leading-none">Solicitar Agendamento</h2>
+                            <p className="text-blue-200 text-xs mt-0.5">Preencha os dados da sua solicitação</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-lg font-black text-white leading-none">Solicitar Agendamento</h2>
-                        <p className="text-blue-200 text-xs mt-0.5">Preencha os dados da sua solicitação</p>
-                    </div>
+                    <button onClick={onClose}
+                        className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+                        <X size={16} />
+                    </button>
                 </div>
-                <button onClick={onClose}
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
-                    <X size={16} />
-                </button>
-            </div>
 
-            {/* Corpo com scroll */}
-            <div className="overflow-y-auto flex-1 px-8 py-6">
-                <form id="room-request-form" onSubmit={handleSubmit} className="space-y-6">
+                {/* Corpo com scroll */}
+                <div className="overflow-y-auto flex-1 px-8 py-6">
+                    <form id="room-request-form" onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* Seção 1: Identificação (somente leitura — perfil logado) */}
-                    <Section title="Identificação" icon={<Users size={15} />}>
-                        <p className="text-xs text-gray-500 mb-3">
-                            Nome, e-mail e {userRole === 'professor' ? 'SIAPE' : 'matrícula'} vêm do seu cadastro e não podem ser alterados neste formulário.
-                        </p>
-                        {loadingProfile ? (
-                            <div className="flex items-center justify-center gap-2 py-10 text-gray-500 text-sm">
-                                <Loader2 size={18} className="animate-spin" /> Carregando seu perfil…
-                            </div>
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="sm:col-span-2">
-                                        <label className={labelClass}>Nome completo</label>
-                                        <div className={readonlyBoxClass}>{locked?.solicitante || '—'}</div>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>E-mail</label>
-                                        <div className={readonlyBoxClass}>{locked?.email || '—'}</div>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>
-                                            {userRole === 'professor' ? 'SIAPE' : 'Matrícula'}
-                                        </label>
-                                        <div className={readonlyBoxClass}>
-                                            {locked?.matricula?.trim() ? locked.matricula : '—'}
+                        {/* Seção 1: Identificação (somente leitura — perfil logado) */}
+                        <Section title="Identificação" icon={<Users size={15} />}>
+                            <p className="text-xs text-gray-500 mb-3">
+                                Nome e e-mail vêm do seu cadastro e não podem ser alterados neste formulário.
+                            </p>
+                            {loadingProfile ? (
+                                <div className="flex items-center justify-center gap-2 py-10 text-gray-500 text-sm">
+                                    <Loader2 size={18} className="animate-spin" /> Carregando seu perfil…
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="sm:col-span-2">
+                                            <label className={labelClass}>Nome completo</label>
+                                            <div className={readonlyBoxClass}>{locked?.solicitante || '—'}</div>
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className={labelClass}>E-mail</label>
+                                            <div className={readonlyBoxClass}>{locked?.email || '—'}</div>
                                         </div>
                                     </div>
-                                </div>
-                                {locked && !String(locked.matricula || '').trim() && (
-                                    <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-                                        <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                                        <p>
-                                            Sem matrícula ou SIAPE no perfil não é possível enviar a solicitação.
-                                            Peça ao administrador para completar seus dados na aba <strong>Usuários</strong>.
-                                        </p>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </Section>
+                                </>
+                            )}
+                        </Section>
 
-                    {/* Seção 2: Evento */}
-                    <Section title="Sobre o Evento" icon={<AlignLeft size={15} />}>
-                        <label className={labelClass}>Motivo *</label>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                            {MOTIVOS.map(m => (
-                                <button key={m.value} type="button"
-                                    onClick={() => set('motivo', m.value)}
-                                    className="px-3 py-2.5 rounded-xl text-xs font-semibold border-2 transition-all text-center"
-                                    style={form.motivo === m.value
-                                        ? { background: 'linear-gradient(135deg,#1c1aa3,#4f46e5)', color: 'white', borderColor: 'transparent', boxShadow: '0 4px 12px rgba(28,26,163,0.3)' }
-                                        : { borderColor: '#e5e7eb', color: '#6b7280', background: 'white' }}>
-                                    {m.label}
-                                </button>
-                            ))}
-                        </div>
+                        {/* Seção 2: Evento */}
+                        <Section title="Sobre o Evento" icon={<AlignLeft size={15} />}>
+                            <label className={labelClass}>Motivo *</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                                {MOTIVOS.map(m => (
+                                    <button key={m.value} type="button"
+                                        onClick={() => set('motivo', m.value)}
+                                        className="px-3 py-2.5 rounded-xl text-xs font-semibold border-2 transition-all text-center"
+                                        style={form.motivo === m.value
+                                            ? { background: 'linear-gradient(135deg,#1c1aa3,#4f46e5)', color: 'white', borderColor: 'transparent', boxShadow: '0 4px 12px rgba(28,26,163,0.3)' }
+                                            : { borderColor: '#e5e7eb', color: '#6b7280', background: 'white' }}>
+                                        {m.label}
+                                    </button>
+                                ))}
+                            </div>
 
-                        <div>
-                            <label className={labelClass}>Descrição do Evento *</label>
-                            <textarea className={`${inputClass} resize-none`} rows={3} required
-                                placeholder="Descreva brevemente o evento, tema ou objetivo..."
-                                value={form.descricao} onChange={e => set('descricao', e.target.value)} />
-                        </div>
+                            <div>
+                                <label className={labelClass}>Descrição do Evento *</label>
+                                <textarea className={`${inputClass} resize-none`} rows={3} required
+                                    placeholder="Descreva brevemente o evento, tema ou objetivo..."
+                                    value={form.descricao} onChange={e => set('descricao', e.target.value)} />
+                            </div>
 
-                        <div className="mt-3">
-                            <label className={labelClass}>Número de participantes</label>
-                            <input className={inputClass} type="number" min="1"
-                                placeholder="Ex: 30"
-                                value={form.participantes} onChange={e => set('participantes', e.target.value)} />
-                        </div>
-                    </Section>
+                            <div className="mt-3">
+                                <label className={labelClass}>Número de participantes</label>
+                                <input className={inputClass} type="number" min="1"
+                                    placeholder="Ex: 30"
+                                    value={form.participantes} onChange={e => set('participantes', e.target.value)} />
+                            </div>
+                        </Section>
 
-                    {/* Seção 3: Sala e Horário */}
-                    <Section title="Sala e Horário" icon={<Calendar size={15} />}>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="sm:col-span-2">
-                                <label className={labelClass}>Sala / Laboratório *</label>
-                                <div className="relative">
-                                    <Building2 size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <select className={`${inputClass} pl-10 appearance-none`} required
-                                        value={form.salaId} onChange={e => set('salaId', e.target.value)}>
-                                        <option value="">Selecione a sala desejada...</option>
-                                        {salas.map(s => (
-                                            <option key={s.id} value={s.id}>
+                        {/* Seção 3: Sala e Horário */}
+                        <Section title="Sala e Horário" icon={<Calendar size={15} />}>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="sm:col-span-2">
+                                    <label className={labelClass}>Sala / Laboratório *</label>
+                                    <div className="relative">
+                                        <Building2 size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                        <select className={`${inputClass} pl-10 appearance-none`} required
+                                            value={form.salaId} onChange={e => set('salaId', e.target.value)}>
+                                            <option value="">Selecione a sala desejada...</option>
+                                            {salas.map(s => (
+                                                <option key={s.id} value={s.id}>
                                                     {s.nome || s.nomeSala || s.codigo_sala} — {(s.tipoSala || s.tipo || '').toLowerCase().includes('lab') ? 'Laboratório' : 'Sala de Aula'}
                                                 </option >
                                             ))}
                                         </select >
-    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                        <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                     </div >
                                 </div >
 
@@ -355,44 +317,44 @@ return (
                                 </div>
                             </div >
 
-    {/* Alerta de conflito */ }
-{
-    conflito && (
-        <div className="mt-3 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
-            <AlertCircle size={16} className="mt-0.5 shrink-0" />
-            <div>
-                <p className="font-bold">Conflito de horário detectado</p>
-                <p className="text-xs text-red-500 mt-0.5">
-                    A sala já está ocupada por <strong>{conflito.disciplina}</strong> ({conflito.professor})
-                    das {conflito.horarioInicio} às {conflito.horarioFim} na {conflito.diaSemana}.
-                </p>
-            </div>
-        </div>
-    )
-}
+                            {/* Alerta de conflito */}
+                            {
+                                conflito && (
+                                    <div className="mt-3 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+                                        <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                                        <div>
+                                            <p className="font-bold">Conflito de horário detectado</p>
+                                            <p className="text-xs text-red-500 mt-0.5">
+                                                A sala já está ocupada por <strong>{conflito.disciplina}</strong> ({conflito.professor})
+                                                das {conflito.horarioInicio} às {conflito.horarioFim} na {conflito.diaSemana}.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )
+                            }
                         </Section >
 
-    {/* Seção 4: Observações */ }
-    < Section title = "Observações Adicionais" icon = {< AlignLeft size = { 15} />} optional >
-        <textarea className={`${inputClass} resize-none`} rows={3}
-            placeholder="Necessidade de projetor, configuração especial, acessibilidade, etc."
-            value={form.observacoes} onChange={e => set('observacoes', e.target.value)} />
+                        {/* Seção 4: Observações */}
+                        < Section title="Observações Adicionais" icon={< AlignLeft size={15} />} optional >
+                            <textarea className={`${inputClass} resize-none`} rows={3}
+                                placeholder="Necessidade de projetor, configuração especial, acessibilidade, etc."
+                                value={form.observacoes} onChange={e => set('observacoes', e.target.value)} />
                         </Section >
 
-    {/* Erro de API */ }
-{
-    error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
-            <AlertCircle size={15} className="shrink-0" />
-            {error}
-        </div>
-    )
-}
+                        {/* Erro de API */}
+                        {
+                            error && (
+                                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+                                    <AlertCircle size={15} className="shrink-0" />
+                                    {error}
+                                </div>
+                            )
+                        }
                     </form >
                 </div >
 
-    {/* Footer */ }
-    < div className = "px-8 py-4 border-t border-gray-100 bg-gray-50/80 flex justify-between items-center gap-4" >
+                {/* Footer */}
+                < div className="px-8 py-4 border-t border-gray-100 bg-gray-50/80 flex justify-between items-center gap-4" >
                     <p className="text-xs text-gray-400">* Campos obrigatórios</p>
                     <div className="flex gap-3">
                         <button type="button" onClick={onClose}
@@ -404,8 +366,7 @@ return (
                                 submitting ||
                                 !form.motivo ||
                                 loadingProfile ||
-                                !locked ||
-                                !String(locked.matricula || '').trim()
+                                !locked
                             }
                             className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5"
                             style={{ background: 'linear-gradient(135deg, #1c1aa3, #7c3aed)', boxShadow: '0 6px 20px rgba(28,26,163,0.35)' }}>
@@ -417,7 +378,7 @@ return (
                     </div>
                 </div >
             </div >
-    <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
         </div >
     )
 }

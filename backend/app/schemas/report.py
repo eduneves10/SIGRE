@@ -2,7 +2,7 @@
 Conjunto de Schemas Pydantic para padronização dos Payloads de Relatório.
 """
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel
 from typing import List, Optional
 from .professor import ProfessorOut
 from .discipline import DisciplineOut
@@ -34,12 +34,12 @@ class HistoryReportOut(BaseModel):
     """
     Schema detalhado para o relatório de histórico de alocações.
     Contém dados formatados como strings para facilitar a renderização em PDF/Excel.
+    Os nomes dos campos são intencionalmente capitalizados em português para corresponder
+    diretamente às chaves JSON lidas pelo componente de exportação do frontend.
     """
-    data: str = Field(..., validation_alias="Data", serialization_alias="data")
-    periodo: str = Field(..., validation_alias="Horário", serialization_alias="periodo")
-    professor: str = Field(..., validation_alias="Professor", serialization_alias="professor")
-    disciplina: str = Field(..., validation_alias="Disciplina", serialization_alias="disciplina")
-    curso: Optional[str] = Field(None, validation_alias="Curso", serialization_alias="curso")
-    sala: str = Field(..., validation_alias="Sala", serialization_alias="sala")
-
-    model_config = ConfigDict(populate_by_name=True)
+    Data: str
+    Horário: str
+    Professor: str
+    Disciplina: str
+    Curso: Optional[str] = None
+    Sala: str

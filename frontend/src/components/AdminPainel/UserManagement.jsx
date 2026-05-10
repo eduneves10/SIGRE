@@ -140,7 +140,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
     senha: '',
   })
   const [formNovo, setFormNovo] = useState({
-    nome: '', email: '', username: '', senha: '', papel: 'aluno', matricula: '', cursoId: '',
+    nome: '', email: '', username: '', senha: '', papel: 'aluno', cursoId: '',
   })
 
   useEffect(() => {
@@ -149,7 +149,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
 
   const handleCriarUsuario = async (e) => {
     e.preventDefault()
-    const { nome, email, username, senha, papel, matricula, cursoId } = formNovo
+    const { nome, email, username, senha, papel, cursoId } = formNovo
     if (!nome?.trim() || !email?.trim() || !senha?.trim()) {
       alert('Preencha nome, e-mail e senha.')
       return
@@ -184,13 +184,12 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
         username: (username || baseUser).trim(),
         senha,
         papel,
-        matricula: matricula.trim() || undefined,
       }
       if (cursoId) {
         payload.cursoId = Number(cursoId)
       }
       await api.post('/users/', payload)
-      setFormNovo({ nome: '', email: '', username: '', senha: '', papel: 'aluno', matricula: '', cursoId: '' })
+      setFormNovo({ nome: '', email: '', username: '', senha: '', papel: 'aluno', cursoId: '' })
       if (onUsuarioCriado) onUsuarioCriado()
       alert('Usuário criado. Ele aparecerá na lista conforme o status definido pelo servidor.')
     } catch (err) {
@@ -213,8 +212,6 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
       username: u.username || '',
       telefone: u.telefone || '',
       papel: u.papel || 'aluno',
-      matricula: u.matricula || '',
-      siape: u.siape || '',
       departamento: u.departamento || '',
       status: u.status || 'pendente',
       cursoId: u.cursoId ? String(u.cursoId) : '',
@@ -250,8 +247,6 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
         username: formEdicao.username.trim() || undefined,
         telefone: formEdicao.telefone.trim() || undefined,
         papel: formEdicao.papel,
-        matricula: formEdicao.matricula.trim() || undefined,
-        siape: formEdicao.siape.trim() || undefined,
         departamento: formEdicao.departamento.trim() || undefined,
         status: formEdicao.status,
         cursoId: formEdicao.cursoId ? Number(formEdicao.cursoId) : undefined,
@@ -302,7 +297,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
             <option value="aluno">Aluno</option>
             <option value="professor">Professor</option>
           </select>
-          <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula (opcional)" value={formNovo.matricula} onChange={e => setFormNovo(f => ({ ...f, matricula: e.target.value }))} />
+
           {(formNovo.papel === 'aluno' || formNovo.papel === 'professor') && (
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">Curso {formNovo.papel === 'aluno' ? '(obrigatório para aluno)' : '(opcional)'}</label>
@@ -384,10 +379,7 @@ export default function UserManagement({ usuarios, onAprovar, onRecusar, onDelet
                 value={formEdicao.username} onChange={e => setFormEdicao(f => ({ ...f, username: e.target.value }))} />
               <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Telefone"
                 value={formEdicao.telefone} onChange={e => setFormEdicao(f => ({ ...f, telefone: e.target.value }))} />
-              <input className="px-3 py-2 rounded-xl border text-sm" placeholder="Matrícula"
-                value={formEdicao.matricula} onChange={e => setFormEdicao(f => ({ ...f, matricula: e.target.value }))} />
-              <input className="px-3 py-2 rounded-xl border text-sm" placeholder="SIAPE"
-                value={formEdicao.siape} onChange={e => setFormEdicao(f => ({ ...f, siape: e.target.value }))} />
+
               <input className="sm:col-span-2 px-3 py-2 rounded-xl border text-sm" placeholder="Departamento"
                 value={formEdicao.departamento} onChange={e => setFormEdicao(f => ({ ...f, departamento: e.target.value }))} />
               <select className="px-3 py-2 rounded-xl border text-sm"

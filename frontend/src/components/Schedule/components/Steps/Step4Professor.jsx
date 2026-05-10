@@ -1,6 +1,6 @@
 import { User } from 'lucide-react'
 import { STYLES } from '../../config/ScheduleFormConfig'
-import { CadastrarBtn, PreviewCard, ErrorHint } from '../Common'
+import { PreviewCard, ErrorHint } from '../Common'
 
 const Step4Professor = ({ form, set, errors, professores, onGoTo }) => {
     const { inp, lbl } = STYLES
@@ -16,7 +16,6 @@ const Step4Professor = ({ form, set, errors, professores, onGoTo }) => {
                         <option value="">Sem professor vinculado...</option>
                         {professores.map(p => <option key={p.id} value={p.id}>{p.nomeProf || p.nome}</option>)}
                     </select>
-                    <CadastrarBtn label="Cadastrar professor" onClick={() => onGoTo('professores')} />
                 </div>
                 <ErrorHint error={errors.professorId} />
             </div>

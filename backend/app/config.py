@@ -18,6 +18,14 @@ class Settings(BaseSettings):
 	JWT_ALGORITHM: str = "HS256"
 	JWT_EXPIRES_MINUTES: int = 120
 
+	# Senha do administrador inicial (campusananindeua@uepa.br).
+	# Obrigatória; se vazia o admin não é criado no startup.
+	ADMIN_SEED_PASSWORD: str = ""
+
+	# Senha padrão atribuída a professores criados via importação de planilha.
+	# O administrador deve comunicá-la aos professores para o primeiro acesso.
+	PROFESSOR_DEFAULT_PASSWORD: str = ""
+
 	GOOGLE_CLIENT_ID: str = ""
 	GOOGLE_CLIENT_SECRET: str = ""
 	GOOGLE_REDIRECT_URI: str = "http://localhost:8000/google/callback"

@@ -8,7 +8,7 @@ isolando a lógica do banco de dados e as transformações de dados das rotas HT
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from app.models import Professor, Disciplina, Curso, Sala, Usuario, Alocacao
+from app.models import Disciplina, Curso, Sala, Usuario, Alocacao
 from app.schemas.report import UserReportOut, HistoryReportOut
 
 def get_base_data(db: Session) -> Dict[str, Any]:
@@ -21,8 +21,13 @@ def get_base_data(db: Session) -> Dict[str, Any]:
     Returns:
         Dict: Dicionário contendo listas de professores, disciplinas, cursos e salas.
     """
+    # Professores são armazenados em `usuarios` com tipo_usuario == 2,
+    # não em uma tabela separada. A consulta filtra os deletados logicamente.
     return {
-        "professors": db.query(Professor).all(),
+        "professors": db.query(Usuario).filter(
+            Usuario.tipo_usuario == 2,
+            Usuario.deleted_at.is_(None)
+        ).all(),
         "disciplines": db.query(Disciplina).all(),
         "courses": db.query(Curso).all(),
         "rooms": db.query(Sala).all()
