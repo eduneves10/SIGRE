@@ -35,6 +35,12 @@ const InfoRow = ({ label, value }) => (
 
 const AdminPainel = () => {
     const { adicionarHorario, atualizarHorario } = useSchedule()
+    const detectedEnvironment = (import.meta.env.MODE)
+    const isProductionEnvironment = detectedEnvironment === 'production'
+    const environmentLabel = isProductionEnvironment ? 'Produção' : 'Desenvolvimento'
+    const environmentBadgeClass = isProductionEnvironment
+        ? 'px-2 py-0.5 rounded-md bg-green-500/20 text-green-400 text-[10px] font-black uppercase border border-green-500/30'
+        : 'px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase border border-blue-400/30'
     const [showImport, setShowImport] = useState(false)
     const [showForm, setShowForm] = useState(false)
     const [showEventoModal, setShowEventoModal] = useState(false)
@@ -728,7 +734,7 @@ const AdminPainel = () => {
                                     </div>
                                     <div className="flex justify-between items-center py-3 border-b border-white/5">
                                         <span className="text-slate-400 text-xs font-bold uppercase">Ambiente</span>
-                                        <span className="px-2 py-0.5 rounded-md bg-green-500/20 text-green-400 text-[10px] font-black uppercase border border-green-500/30">Produção</span>
+                                        <span className={environmentBadgeClass}>{environmentLabel}</span>
                                     </div>
                                     <div className="flex justify-between items-center py-3">
                                         <span className="text-slate-400 text-xs font-bold uppercase">Campus</span>
