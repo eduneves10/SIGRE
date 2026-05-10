@@ -6,11 +6,13 @@ Responsabilidades:
 - Expandir instâncias de eventos recorrentes dentro de um intervalo de datas.
 """
 
-from typing import Optional, Any
+from typing import Optional
 from datetime import datetime
 from dateutil.rrule import rrulestr
 
 from app.models import Alocacao
+from app.models.room import Sala
+from app.models.user import Usuario
 from app.services.infra.datetime_utils import APP_TIMEZONE_NAME, from_storage_datetime
 
 PLATFORM_EVENT_SOURCE = "alocacoes"
@@ -36,14 +38,13 @@ def build_event_summary(tipo: Optional[str], uso: Optional[str], room_label: Opt
 def build_event_description(
     justificativa: Optional[str],
     *,
-    room: Optional[Any] = None,
-    applicant: Optional[Any] = None,
-    professor: Optional[Any] = None,
+    room: Optional[Sala] = None,
+    applicant: Optional[Usuario] = None,
+    professor: Optional[Usuario] = None,
     reservation: Optional[Alocacao] = None,
 ) -> str:
     """
     Gera a descrição do evento com todas as informações relevantes para o usuário.
-
     """
     lines: list[str] = []
 
