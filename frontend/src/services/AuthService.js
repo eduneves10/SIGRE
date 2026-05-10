@@ -34,13 +34,7 @@ export const applyUserProfile = (me) => {
   }
   localStorage.setItem('adminUser', me.nome ?? 'Admin')
 
-  const mat = me.matricula != null && String(me.matricula).trim() !== '' ? String(me.matricula).trim() : ''
-  if (mat) localStorage.setItem('userMatricula', mat)
-  else localStorage.removeItem('userMatricula')
 
-  const sia = me.siape != null && String(me.siape).trim() !== '' ? String(me.siape).trim() : ''
-  if (sia) localStorage.setItem('userSiape', sia)
-  else localStorage.removeItem('userSiape')
 }
 
 /**
@@ -56,7 +50,7 @@ export const login = async (username, senha) => {
 /**
  * Cadastro — POST /auth/register
  * Campos comuns: nome, email, telefone, username, senha, papel
- * Aluno:     + matricula, cursoId (número inteiro)
+ * Aluno:     + cursoId (número inteiro)
  * Professor: + cursoId (número inteiro), departamento
  */
 export const register = async (dados) => {
@@ -69,11 +63,11 @@ export const register = async (dados) => {
  */
 export const saveSession = (userData) => {
   localStorage.setItem('access_token', userData.access_token)
-  localStorage.setItem('userRole',     userData.papel)
-  localStorage.setItem('userName',     userData.nome)
-  localStorage.setItem('userEmail',    userData.email)
-  localStorage.setItem('userId',       userData.id)
-  
+  localStorage.setItem('userRole', userData.papel)
+  localStorage.setItem('userName', userData.nome)
+  localStorage.setItem('userEmail', userData.email)
+  localStorage.setItem('userId', userData.id)
+
   if (userData.papel === 'admin') {
     localStorage.setItem('isAdminAuthenticated', 'true')
   }
@@ -90,6 +84,5 @@ export const clearSession = () => {
   localStorage.removeItem('userId')
   localStorage.removeItem('isAdminAuthenticated')
   localStorage.removeItem('adminUser')
-  localStorage.removeItem('userMatricula')
-  localStorage.removeItem('userSiape')
+
 }

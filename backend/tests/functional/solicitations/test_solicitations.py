@@ -19,7 +19,6 @@ def test_create_solicitation_success(client, db_session):
     solic_data = {
         "solicitante": "Test solicitante",
         "email": "solicitante@test.com",
-        "matricula": "123456",
         "papel": "professor",
         "motivo": "Aula extra",
         "descricao": "Aula de algoritmos",
@@ -41,7 +40,6 @@ def test_create_solicitation_invalid_room(client):
     solic_data = {
         "solicitante": "Test",
         "email": "test@test.com",
-        "matricula": "123",
         "papel": "aluno",
         "motivo": "m",
         "descricao": "d",

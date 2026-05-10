@@ -34,7 +34,7 @@ const Login = ({ onLoginSuccess }) => {
 
     const [registerData, setRegisterData] = useState({
         nome: '', email: '', telefone: '', username: '', password: '', confirmPassword: '',
-        matricula: '', cursoId: '', siape: '', departamento: '',
+        cursoId: '', departamento: '',
     })
 
     // Carrega cursos ao entrar no modo registro
@@ -122,7 +122,7 @@ const Login = ({ onLoginSuccess }) => {
     }
 
     const validateRegister = () => {
-        const { nome, email, username, password, confirmPassword, matricula, cursoId, departamento } = registerData
+        const { nome, email, username, password, confirmPassword, cursoId, departamento } = registerData
 
         if (!nome.trim()) return 'Informe seu nome completo'
         if (!username.trim()) return 'Informe seu nome de usuário'
@@ -131,7 +131,6 @@ const Login = ({ onLoginSuccess }) => {
         if (activeRole === 'aluno') {
             if (!email.toLowerCase().endsWith('@aluno.uepa.br'))
                 return 'O e-mail deve ser do domínio @aluno.uepa.br'
-            if (!matricula.trim()) return 'Informe sua matrícula'
             if (!cursoId) return 'Selecione seu curso'
         }
 
@@ -173,7 +172,6 @@ const Login = ({ onLoginSuccess }) => {
                 senha: registerData.password,
                 papel: activeRole,
                 cursoId: registerData.cursoId ? Number(registerData.cursoId) : undefined,
-                matricula: registerData.matricula || undefined,
                 departamento: registerData.departamento || undefined,
             }
 
@@ -202,8 +200,8 @@ const Login = ({ onLoginSuccess }) => {
         setFormData({ username: '', password: '' })
         setRegisterData({
             nome: '', email: '', telefone: '', username: '',
-            password: '', confirmPassword: '', matricula: '',
-            cursoId: '', siape: '', departamento: '',
+            password: '', confirmPassword: '',
+            cursoId: '', departamento: '',
         })
     }
 
@@ -212,8 +210,8 @@ const Login = ({ onLoginSuccess }) => {
         setFormData({ username: '', password: '' })
         setRegisterData({
             nome: '', email: '', telefone: '', username: '',
-            password: '', confirmPassword: '', matricula: '',
-            cursoId: '', siape: '', departamento: '',
+            password: '', confirmPassword: '',
+            cursoId: '', departamento: '',
         })
     }
 
@@ -409,11 +407,6 @@ const Login = ({ onLoginSuccess }) => {
                             {/* Campos específicos — Aluno */}
                             {activeRole === 'aluno' && (
                                 <div className="grid grid-cols-2 gap-3">
-                                    <input type="text" name="matricula" value={registerData.matricula}
-                                        onChange={handleRegisterChange} placeholder="Matrícula" required
-                                        className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
-                                        onFocus={e => e.target.style.borderColor = accentColor}
-                                        onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
 
                                     {/* cursoId — value é o ID numérico do curso */}
                                     <div className="relative">
@@ -436,7 +429,7 @@ const Login = ({ onLoginSuccess }) => {
                             {activeRole === 'professor' && (
                                 <div className="grid grid-cols-2 gap-3">
                                     {/* cursoId — value é o ID numérico do curso */}
-                                    <div className="relative">
+                                    <div className="relative col-span-2">
                                         <select name="cursoId" value={registerData.cursoId}
                                             onChange={handleRegisterChange} required
                                             className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all appearance-none"
@@ -454,9 +447,10 @@ const Login = ({ onLoginSuccess }) => {
 
                                     <input type="text" name="departamento" value={registerData.departamento}
                                         onChange={handleRegisterChange} placeholder="Departamento" required
-                                        className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
+                                        className="col-span-2 px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm bg-gray-50 focus:outline-none transition-all"
                                         onFocus={e => e.target.style.borderColor = accentColor}
                                         onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
+
                                 </div>
                             )}
 

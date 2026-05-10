@@ -21,10 +21,6 @@ class ProfessorService:
 
         if db.query(Usuario).filter(Usuario.email == data.emailProf).first():
             raise HTTPException(status_code=409, detail="Professor com este e-mail já cadastrado")
-
-        mat = (data.matriculaProf or "").strip() or None
-        if mat and db.query(Usuario).filter(Usuario.matricula == mat).first():
-            raise HTTPException(status_code=409, detail="Professor com esta matrícula já cadastrada")
             
         baseUser = data.emailProf.split('@')[0]
         
@@ -37,7 +33,6 @@ class ProfessorService:
         db_obj = Usuario(
             nome=data.nomeProf,
             email=data.emailProf.strip(),
-            matricula=mat,
             tipo_usuario=2, # Professor
             status="aprovado",
             senha=hash_password("mudarsenha123"), # Default password
@@ -57,9 +52,6 @@ class ProfessorService:
             db_obj.nome = data.nomeProf
         if data.emailProf is not None:
             db_obj.email = data.emailProf
-        if data.matriculaProf is not None:
-            m = (data.matriculaProf or "").strip() or None
-            db_obj.matricula = m
             
         db.commit()
         db.refresh(db_obj)

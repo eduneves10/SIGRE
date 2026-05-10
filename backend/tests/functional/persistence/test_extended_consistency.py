@@ -26,7 +26,6 @@ def test_solicitation_course_persistence(client, db_session):
     payload = {
         "solicitante": "Applicant Name",
         "email": "applicant@test.com",
-        "matricula": "2023001",
         "papel": "aluno",
         "motivo": "Academic Meeting",
         "descricao": "Description",
