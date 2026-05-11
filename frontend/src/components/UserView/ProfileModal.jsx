@@ -237,16 +237,16 @@ const ProfileModal = ({ userRole, onClose }) => {
                                             Dados institucionais (somente leitura)
                                         </p>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className={cls.label}>E-mail</label>
-                                                <div className={cls.readonly}>{perfil?.email || '—'}</div>
-                                            </div>
                                             {perfil?.username && (
-                                                <div>
+                                                <div className="sm:col-span-2">
                                                     <label className={cls.label}>Username</label>
                                                     <div className={cls.readonly}>@{perfil.username}</div>
                                                 </div>
                                             )}
+                                            <div className="sm:col-span-2">
+                                                <label className={cls.label}>E-mail</label>
+                                                <div className={cls.readonly}>{perfil?.email || '—'}</div>
+                                            </div>
                                             {perfil?.curso && (
                                                 <div>
                                                     <label className={cls.label}>Curso</label>
