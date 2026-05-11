@@ -87,11 +87,6 @@ const Login = ({ onLoginSuccess }) => {
 
         }
         catch (err) {
-            if (err.response?.status === 403) {
-                setError('Sua conta ainda aguarda aprovação do administrador.')
-                return
-            }
-
             const detail = err.response?.data?.detail || err.response?.data?.message
             if (Array.isArray(detail)) {
                 setError(detail[0].msg.replace('Value error, ', ''))

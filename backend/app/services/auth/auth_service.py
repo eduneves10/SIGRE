@@ -24,8 +24,13 @@ class AuthService:
         if not user or not verify_password(login_data.senha, user.senha):
             raise HTTPException(status_code=401, detail="Usuário ou senha incorretos")
 
-        if user.status != "aprovado" and user.tipo_usuario != 3:
-            raise HTTPException(status_code=403, detail="Sua conta aguarda aprovação do administrador")
+        if user.tipo_usuario != 3:
+            if user.status == "pendente":
+                raise HTTPException(status_code=403, detail="Sua conta aguarda aprovação do administrador")
+            elif user.status == "recusado":
+                raise HTTPException(status_code=403, detail="Sua conta foi recusada pelo administrador")
+            elif user.status != "aprovado":
+                raise HTTPException(status_code=403, detail="Sua conta ainda não está habilitada")
 
         papel = REVERSE_ROLE_MAP.get(user.tipo_usuario, "aluno")
         access_token = create_access_token(subject=user.email, user_id=user.id, role=user.tipo_usuario)
